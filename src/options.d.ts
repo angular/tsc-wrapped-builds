@@ -5,5 +5,6 @@ interface Options extends ts.CompilerOptions {
     skipMetadataEmit: boolean;
     skipTemplateCodegen: boolean;
     trace: boolean;
+    debug?: boolean;
 }
 export default Options;
