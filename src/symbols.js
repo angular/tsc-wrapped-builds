@@ -21,6 +21,7 @@ var Symbols = (function () {
         configurable: true
     });
     Symbols.prototype.buildImports = function () {
+        var _this = this;
         var symbols = this._symbols;
         // Collect the imported symbols into this.symbols
         var stripQuotes = function (s) { return s.replace(/^['"]|['"]$/g, ''); };
@@ -32,6 +33,15 @@ var Symbols = (function () {
                         ts.SyntaxKind.ExternalModuleReference) {
                         var externalReference = importEqualsDeclaration.moduleReference;
                         // An `import <identifier> = require(<module-specifier>);
+                        if (!externalReference.expression.parent) {
+                            // The `parent` field of a node is set by the TypeScript binder (run as
+                            // part of the type checker). Setting it here allows us to call `getText()`
+                            // even if the `SourceFile` was not type checked (which looks for `SourceFile`
+                            // in the parent chain). This doesn't damage the node as the binder unconditionally
+                            // sets the parent.
+                            externalReference.expression.parent = externalReference;
+                            externalReference.parent = _this.sourceFile;
+                        }
                         var from_1 = stripQuotes(externalReference.expression.getText());
                         symbols.set(importEqualsDeclaration.name.text, { __symbolic: 'reference', module: from_1 });
                     }
@@ -44,6 +54,11 @@ var Symbols = (function () {
                     if (!importDecl.importClause) {
                         // An `import <module-specifier>` clause which does not bring symbols into scope.
                         break;
+                    }
+                    if (!importDecl.moduleSpecifier.parent) {
+                        // See note above in the `ImportEqualDeclaration` case.
+                        importDecl.moduleSpecifier.parent = importDecl;
+                        importDecl.parent = _this.sourceFile;
                     }
                     var from = stripQuotes(importDecl.moduleSpecifier.getText());
                     if (importDecl.importClause.name) {
