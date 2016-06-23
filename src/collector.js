@@ -57,9 +57,8 @@ var MetadataCollector = (function () {
                 var isConstructor = false;
                 switch (member.kind) {
                     case ts.SyntaxKind.Constructor:
-                        isConstructor = true;
-                    // fallthrough
                     case ts.SyntaxKind.MethodDeclaration:
+                        isConstructor = member.kind === ts.SyntaxKind.Constructor;
                         var method = member;
                         var methodDecorators = getDecorators(method.decorators);
                         var parameters = method.parameters;

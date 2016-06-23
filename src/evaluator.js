@@ -154,6 +154,8 @@ var Evaluator = (function () {
                         case ts.SyntaxKind.BarBarToken:
                             return this.isFoldableWorker(binaryExpression.left, folding) &&
                                 this.isFoldableWorker(binaryExpression.right, folding);
+                        default:
+                            return false;
                     }
                 case ts.SyntaxKind.PropertyAccessExpression:
                     var propertyAccessExpression = node;
