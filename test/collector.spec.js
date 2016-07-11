@@ -11,7 +11,8 @@ describe('Collector', function () {
     beforeEach(function () {
         host = new typescript_mocks_1.Host(FILES, [
             '/app/app.component.ts', '/app/cases-data.ts', '/app/error-cases.ts', '/promise.ts',
-            '/unsupported-1.ts', '/unsupported-2.ts', 'import-star.ts', 'exported-functions.ts'
+            '/unsupported-1.ts', '/unsupported-2.ts', 'import-star.ts', 'exported-functions.ts',
+            'exported-enum.ts', 'exported-consts.ts'
         ]);
         service = ts.createLanguageService(host, documentRegistry);
         program = service.getProgram();
@@ -275,6 +276,24 @@ describe('Collector', function () {
             { __symbolic: 'reference', module: 'angular2/common', name: 'NgFor' }
         ]);
     });
+    it('should be able to collect the value of an enum', function () {
+        var enumSource = program.getSourceFile('/exported-enum.ts');
+        var metadata = collector.getMetadata(enumSource);
+        var someEnum = metadata.metadata['SomeEnum'];
+        expect(someEnum).toEqual({ A: 0, B: 1, C: 100, D: 101 });
+    });
+    it('should be able to collect enums initialized from consts', function () {
+        var enumSource = program.getSourceFile('/exported-enum.ts');
+        var metadata = collector.getMetadata(enumSource);
+        var complexEnum = metadata.metadata['ComplexEnum'];
+        expect(complexEnum).toEqual({
+            A: 0,
+            B: 1,
+            C: 30,
+            D: 40,
+            E: { __symbolic: 'reference', module: './exported-consts', name: 'constValue' }
+        });
+    });
 });
 // TODO: Do not use \` in a template literal as it confuses clang-format
 var FILES = {
@@ -301,6 +320,8 @@ var FILES = {
     'unsupported-2.ts': "\n    import {Injectable} from 'angular2/core';\n\n    class Foo {}\n\n    @Injectable()\n    export class Bar {\n      constructor(private f: Foo) {}\n    }\n  ",
     'import-star.ts': "\n    import {Injectable} from 'angular2/core';\n    import * as common from 'angular2/common';\n\n    @Injectable()\n    export class SomeClass {\n      constructor(private f: common.NgFor) {}\n    }\n  ",
     'exported-functions.ts': "\n    export function one(a: string, b: string, c: string) {\n      return {a: a, b: b, c: c};\n    }\n    export function two(a: string, b: string, c: string) {\n      return {a, b, c};\n    }\n    export function three({a, b, c}: {a: string, b: string, c: string}) {\n      return [a, b, c];\n    }\n    export function supportsState(): boolean {\n     return !!window.history.pushState;\n    }\n  ",
+    'exported-enum.ts': "\n    import {constValue} from './exported-consts';\n\n    export const someValue = 30;\n    export enum SomeEnum { A, B, C = 100, D };\n    export enum ComplexEnum { A, B, C = someValue, D = someValue + 10, E = constValue };\n  ",
+    'exported-consts.ts': "\n    export const constValue = 100;\n  ",
     'node_modules': {
         'angular2': {
             'core.d.ts': "\n          export interface Type extends Function { }\n          export interface TypeDecorator {\n              <T extends Type>(type: T): T;\n              (target: Object, propertyKey?: string | symbol, parameterIndex?: number): void;\n              annotations: any[];\n          }\n          export interface ComponentDecorator extends TypeDecorator { }\n          export interface ComponentFactory {\n              (obj: {\n                  selector?: string;\n                  inputs?: string[];\n                  outputs?: string[];\n                  properties?: string[];\n                  events?: string[];\n                  host?: {\n                      [key: string]: string;\n                  };\n                  bindings?: any[];\n                  providers?: any[];\n                  exportAs?: string;\n                  moduleId?: string;\n                  queries?: {\n                      [key: string]: any;\n                  };\n                  viewBindings?: any[];\n                  viewProviders?: any[];\n                  templateUrl?: string;\n                  template?: string;\n                  styleUrls?: string[];\n                  styles?: string[];\n                  directives?: Array<Type | any[]>;\n                  pipes?: Array<Type | any[]>;\n              }): ComponentDecorator;\n          }\n          export declare var Component: ComponentFactory;\n          export interface InputFactory {\n              (bindingPropertyName?: string): any;\n              new (bindingPropertyName?: string): any;\n          }\n          export declare var Input: InputFactory;\n          export interface InjectableFactory {\n              (): any;\n          }\n          export declare var Injectable: InjectableFactory;\n          export interface OnInit {\n              ngOnInit(): any;\n          }\n      ",

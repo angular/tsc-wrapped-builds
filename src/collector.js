@@ -169,6 +169,52 @@ var MetadataCollector = (function () {
                     }
                     // Otherwise don't record the function.
                     break;
+                case ts.SyntaxKind.EnumDeclaration:
+                    var enumDeclaration = node;
+                    var enumValueHolder = {};
+                    var enumName = enumDeclaration.name.text;
+                    var nextDefaultValue = 0;
+                    var writtenMembers = 0;
+                    for (var _i = 0, _a = enumDeclaration.members; _i < _a.length; _i++) {
+                        var member = _a[_i];
+                        var enumValue = void 0;
+                        if (!member.initializer) {
+                            enumValue = nextDefaultValue;
+                        }
+                        else {
+                            enumValue = evaluator.evaluateNode(member.initializer);
+                        }
+                        var name_3 = undefined;
+                        if (member.name.kind == ts.SyntaxKind.Identifier) {
+                            var identifier = member.name;
+                            name_3 = identifier.text;
+                            enumValueHolder[name_3] = enumValue;
+                            writtenMembers++;
+                        }
+                        if (typeof enumValue === 'number') {
+                            nextDefaultValue = enumValue + 1;
+                        }
+                        else if (name_3) {
+                            nextDefaultValue = {
+                                __symbolic: 'binary',
+                                operator: '+',
+                                left: {
+                                    __symbolic: 'select',
+                                    expression: { __symbolic: 'reference', name: enumName }, name: name_3
+                                }
+                            };
+                        }
+                        else {
+                            nextDefaultValue = errorSym('Unsuppported enum member name', member.name);
+                        }
+                        ;
+                    }
+                    if (writtenMembers) {
+                        if (!metadata)
+                            metadata = {};
+                        metadata[enumName] = enumValueHolder;
+                    }
+                    break;
                 case ts.SyntaxKind.VariableStatement:
                     var variableStatement = node;
                     var _loop_1 = function(variableDeclaration) {
@@ -200,13 +246,13 @@ var MetadataCollector = (function () {
                             var report_1 = function (nameNode) {
                                 switch (nameNode.kind) {
                                     case ts.SyntaxKind.Identifier:
-                                        var name_3 = nameNode;
+                                        var name_4 = nameNode;
                                         var varValue = errorSym('Destructuring not supported', nameNode);
-                                        locals.define(name_3.text, varValue);
+                                        locals.define(name_4.text, varValue);
                                         if (node.flags & ts.NodeFlags.Export) {
                                             if (!metadata)
                                                 metadata = {};
-                                            metadata[name_3.text] = varValue;
+                                            metadata[name_4.text] = varValue;
                                         }
                                         break;
                                     case ts.SyntaxKind.BindingElement:
@@ -223,8 +269,8 @@ var MetadataCollector = (function () {
                             report_1(variableDeclaration.name);
                         }
                     };
-                    for (var _i = 0, _a = variableStatement.declarationList.declarations; _i < _a.length; _i++) {
-                        var variableDeclaration = _a[_i];
+                    for (var _b = 0, _c = variableStatement.declarationList.declarations; _b < _c.length; _b++) {
+                        var variableDeclaration = _c[_b];
                         _loop_1(variableDeclaration);
                     }
                     break;
