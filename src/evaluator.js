@@ -342,7 +342,8 @@ var Evaluator = (function () {
                                 __symbolic: 'reference', module: left_1.module, name: qualifiedName.right.text
                             };
                         }
-                        return errorSymbol('Qualified type names not supported', node);
+                        // Record a type reference to a declared type as a select.
+                        return { __symbolic: 'select', expression: left_1, member: qualifiedName.right.text };
                     }
                     else {
                         var identifier_1 = typeNameNode_1;

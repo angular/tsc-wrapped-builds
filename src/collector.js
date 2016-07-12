@@ -32,7 +32,8 @@ var MetadataCollector = (function () {
             }
             function referenceFrom(node) {
                 var result = evaluator.evaluateNode(node);
-                if (schema_1.isMetadataError(result) || schema_1.isMetadataSymbolicReferenceExpression(result)) {
+                if (schema_1.isMetadataError(result) || schema_1.isMetadataSymbolicReferenceExpression(result) ||
+                    schema_1.isMetadataSymbolicSelectExpression(result)) {
                     return result;
                 }
                 else {

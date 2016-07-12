@@ -14,7 +14,7 @@ describe('Evaluator', function () {
     beforeEach(function () {
         host = new typescript_mocks_1.Host(FILES, [
             'expressions.ts', 'consts.ts', 'const_expr.ts', 'forwardRef.ts', 'classes.ts',
-            'newExpression.ts', 'errors.ts'
+            'newExpression.ts', 'errors.ts', 'declared.ts'
         ]);
         service = ts.createLanguageService(host, documentRegistry);
         program = service.getProgram();
@@ -136,23 +136,25 @@ describe('Evaluator', function () {
             arguments: ['name', 12]
         });
     });
+    it('should support referene to a declared module type', function () {
+        var declared = program.getSourceFile('declared.ts');
+        var aDecl = typescript_mocks_1.findVar(declared, 'a');
+        expect(evaluator.evaluateNode(aDecl.type)).toEqual({
+            __symbolic: 'select',
+            expression: { __symbolic: 'reference', name: 'Foo' },
+            member: 'A'
+        });
+    });
     it('should return errors for unsupported expressions', function () {
         var errors = program.getSourceFile('errors.ts');
-        var aDecl = typescript_mocks_1.findVar(errors, 'a');
-        expect(evaluator.evaluateNode(aDecl.type)).toEqual({
-            __symbolic: 'error',
-            message: 'Qualified type names not supported',
-            line: 5,
-            character: 10
-        });
         var fDecl = typescript_mocks_1.findVar(errors, 'f');
         expect(evaluator.evaluateNode(fDecl.initializer))
-            .toEqual({ __symbolic: 'error', message: 'Function call not supported', line: 6, character: 11 });
+            .toEqual({ __symbolic: 'error', message: 'Function call not supported', line: 1, character: 11 });
         var eDecl = typescript_mocks_1.findVar(errors, 'e');
         expect(evaluator.evaluateNode(eDecl.type)).toEqual({
             __symbolic: 'error',
             message: 'Could not resolve type',
-            line: 7,
+            line: 2,
             character: 10,
             context: { typeName: 'NotFound' }
         });
@@ -160,7 +162,7 @@ describe('Evaluator', function () {
         expect(evaluator.evaluateNode(sDecl.initializer)).toEqual({
             __symbolic: 'error',
             message: 'Name expected',
-            line: 8,
+            line: 3,
             character: 13,
             context: { received: '1' }
         });
@@ -168,7 +170,7 @@ describe('Evaluator', function () {
         expect(evaluator.evaluateNode(tDecl.initializer)).toEqual({
             __symbolic: 'error',
             message: 'Expression form not supported',
-            line: 9,
+            line: 4,
             character: 11
         });
     });
@@ -196,6 +198,7 @@ var FILES = {
     'const_expr.ts': "\n    function CONST_EXPR(value: any) { return value; }\n    export var bTrue = CONST_EXPR(true);\n    export var bFalse = CONST_EXPR(false);\n  ",
     'forwardRef.ts': "\n    function forwardRef(value: any) { return value; }\n    export var bTrue = forwardRef(() => true);\n    export var bFalse = forwardRef(() => false);\n  ",
     'newExpression.ts': "\n    import {Value} from './classes';\n    function CONST_EXPR(value: any) { return value; }\n    function forwardRef(value: any) { return value; }\n    export const someValue = new Value(\"name\", 12);\n    export const complex = CONST_EXPR(new Value(\"name\", forwardRef(() => 12)));\n  ",
-    'errors.ts': "\n    declare namespace Foo {\n      type A = string;\n    }\n\n    let a: Foo.A = 'some value';\n    let f = () => 1;\n    let e: NotFound;\n    let s = { 1: 1, 2: 2 };\n    let t = typeof 12;\n  ",
+    'errors.ts': "\n    let f = () => 1;\n    let e: NotFound;\n    let s = { 1: 1, 2: 2 };\n    let t = typeof 12;\n  ",
+    'declared.ts': "\n    declare namespace Foo {\n      type A = string;\n    }\n\n    let a: Foo.A = 'some value';\n  "
 };
 //# sourceMappingURL=evaluator.spec.js.map
