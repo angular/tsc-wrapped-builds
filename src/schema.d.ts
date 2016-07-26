@@ -11,6 +11,7 @@ export interface ClassMetadata {
     __symbolic: 'class';
     decorators?: (MetadataSymbolicExpression | MetadataError)[];
     members?: MetadataMap;
+    statics?: MetadataObject;
 }
 export declare function isClassMetadata(value: any): value is ClassMetadata;
 export interface MetadataMap {

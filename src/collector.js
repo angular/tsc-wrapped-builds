@@ -23,6 +23,28 @@ var MetadataCollector = (function () {
         function errorSym(message, node, context) {
             return evaluator_1.errorSymbol(message, node, context, sourceFile);
         }
+        function maybeGetSimpleFunction(functionDeclaration) {
+            if (functionDeclaration.name.kind == ts.SyntaxKind.Identifier) {
+                var nameNode = functionDeclaration.name;
+                var functionName = nameNode.text;
+                var functionBody = functionDeclaration.body;
+                if (functionBody && functionBody.statements.length == 1) {
+                    var statement = functionBody.statements[0];
+                    if (statement.kind === ts.SyntaxKind.ReturnStatement) {
+                        var returnStatement = statement;
+                        if (returnStatement.expression) {
+                            return {
+                                name: functionName, func: {
+                                    __symbolic: 'function',
+                                    parameters: namesOf(functionDeclaration.parameters),
+                                    value: evaluator.evaluateNode(returnStatement.expression)
+                                }
+                            };
+                        }
+                    }
+                }
+            }
+        }
         function classMetadataOf(classDeclaration) {
             var result = { __symbolic: 'class' };
             function getDecorators(decorators) {
@@ -53,6 +75,13 @@ var MetadataCollector = (function () {
                 data.push(metadata);
                 members[name] = data;
             }
+            // static member
+            var statics = null;
+            function recordStaticMember(name, value) {
+                if (!statics)
+                    statics = {};
+                statics[name] = value;
+            }
             for (var _i = 0, _a = classDeclaration.members; _i < _a.length; _i++) {
                 var member = _a[_i];
                 var isConstructor = false;
@@ -61,6 +90,13 @@ var MetadataCollector = (function () {
                     case ts.SyntaxKind.MethodDeclaration:
                         isConstructor = member.kind === ts.SyntaxKind.Constructor;
                         var method = member;
+                        if (method.flags & ts.NodeFlags.Static) {
+                            var maybeFunc = maybeGetSimpleFunction(method);
+                            if (maybeFunc) {
+                                recordStaticMember(maybeFunc.name, maybeFunc.func);
+                            }
+                            continue;
+                        }
                         var methodDecorators = getDecorators(method.decorators);
                         var parameters = method.parameters;
                         var parameterDecoratorData = [];
@@ -114,7 +150,10 @@ var MetadataCollector = (function () {
             if (members) {
                 result.members = members;
             }
-            return result.decorators || members ? result : undefined;
+            if (statics) {
+                result.statics = statics;
+            }
+            return result.decorators || members || statics ? result : undefined;
         }
         // Predeclare classes
         ts.forEachChild(sourceFile, function (node) {
@@ -150,22 +189,11 @@ var MetadataCollector = (function () {
                     // names substitution will be performed by the StaticReflector.
                     if (node.flags & ts.NodeFlags.Export) {
                         var functionDeclaration = node;
-                        var functionName = functionDeclaration.name.text;
-                        var functionBody = functionDeclaration.body;
-                        if (functionBody && functionBody.statements.length == 1) {
-                            var statement = functionBody.statements[0];
-                            if (statement.kind === ts.SyntaxKind.ReturnStatement) {
-                                var returnStatement = statement;
-                                if (returnStatement.expression) {
-                                    if (!metadata)
-                                        metadata = {};
-                                    metadata[functionName] = {
-                                        __symbolic: 'function',
-                                        parameters: namesOf(functionDeclaration.parameters),
-                                        value: evaluator.evaluateNode(returnStatement.expression)
-                                    };
-                                }
-                            }
+                        var maybeFunc = maybeGetSimpleFunction(functionDeclaration);
+                        if (maybeFunc) {
+                            if (!metadata)
+                                metadata = {};
+                            metadata[maybeFunc.name] = maybeFunc.func;
                         }
                     }
                     // Otherwise don't record the function.
