@@ -12,7 +12,8 @@ describe('Collector', function () {
         host = new typescript_mocks_1.Host(FILES, [
             '/app/app.component.ts', '/app/cases-data.ts', '/app/error-cases.ts', '/promise.ts',
             '/unsupported-1.ts', '/unsupported-2.ts', 'import-star.ts', 'exported-functions.ts',
-            'exported-enum.ts', 'exported-consts.ts', 'static-method.ts', 'static-method-call.ts'
+            'exported-enum.ts', 'exported-consts.ts', 'static-method.ts', 'static-method-call.ts',
+            'static-field-reference.ts'
         ]);
         service = ts.createLanguageService(host, documentRegistry);
         program = service.getProgram();
@@ -333,6 +334,35 @@ describe('Collector', function () {
                     }]
             }]);
     });
+    it('should be able to collect a static field', function () {
+        var staticSource = program.getSourceFile('/static-field.ts');
+        var metadata = collector.getMetadata(staticSource);
+        expect(metadata).toBeDefined();
+        var classData = metadata.metadata['MyModule'];
+        expect(classData).toBeDefined();
+        expect(classData.statics).toEqual({ VALUE: 'Some string' });
+    });
+    it('should be able to collect a reference to a static field', function () {
+        var staticSource = program.getSourceFile('/static-field-reference.ts');
+        var metadata = collector.getMetadata(staticSource);
+        expect(metadata).toBeDefined();
+        var classData = metadata.metadata['Foo'];
+        expect(classData).toBeDefined();
+        expect(classData.decorators).toEqual([{
+                __symbolic: 'call',
+                expression: { __symbolic: 'reference', module: 'angular2/core', name: 'Component' },
+                arguments: [{
+                        providers: [{
+                                provide: 'a',
+                                useValue: {
+                                    __symbolic: 'select',
+                                    expression: { __symbolic: 'reference', module: './static-field.ts', name: 'MyModule' },
+                                    member: 'VALUE'
+                                }
+                            }]
+                    }]
+            }]);
+    });
 });
 // TODO: Do not use \` in a template literal as it confuses clang-format
 var FILES = {
@@ -363,6 +393,8 @@ var FILES = {
     'exported-consts.ts': "\n    export const constValue = 100;\n  ",
     'static-method.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(comp: any): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: comp }\n        ];\n      }\n    }\n  ",
     'static-method-call.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-method.ts';\n\n    @Component({\n      providers: MyModule.with('a')\n    })\n    export class Foo { }\n  ",
+    'static-field.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static VALUE = 'Some string';\n    }\n  ",
+    'static-field-reference.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-field.ts';\n\n    @Component({\n      providers: [ { provide: 'a', useValue: MyModule.VALUE } ]\n    })\n    export class Foo { }\n  ",
     'node_modules': {
         'angular2': {
             'core.d.ts': "\n          export interface Type extends Function { }\n          export interface TypeDecorator {\n              <T extends Type>(type: T): T;\n              (target: Object, propertyKey?: string | symbol, parameterIndex?: number): void;\n              annotations: any[];\n          }\n          export interface ComponentDecorator extends TypeDecorator { }\n          export interface ComponentFactory {\n              (obj: {\n                  selector?: string;\n                  inputs?: string[];\n                  outputs?: string[];\n                  properties?: string[];\n                  events?: string[];\n                  host?: {\n                      [key: string]: string;\n                  };\n                  bindings?: any[];\n                  providers?: any[];\n                  exportAs?: string;\n                  moduleId?: string;\n                  queries?: {\n                      [key: string]: any;\n                  };\n                  viewBindings?: any[];\n                  viewProviders?: any[];\n                  templateUrl?: string;\n                  template?: string;\n                  styleUrls?: string[];\n                  styles?: string[];\n                  directives?: Array<Type | any[]>;\n                  pipes?: Array<Type | any[]>;\n              }): ComponentDecorator;\n          }\n          export declare var Component: ComponentFactory;\n          export interface InputFactory {\n              (bindingPropertyName?: string): any;\n              new (bindingPropertyName?: string): any;\n          }\n          export declare var Input: InputFactory;\n          export interface InjectableFactory {\n              (): any;\n          }\n          export declare var Injectable: InjectableFactory;\n          export interface OnInit {\n              ngOnInit(): any;\n          }\n      ",

@@ -137,11 +137,23 @@ var MetadataCollector = (function () {
                     case ts.SyntaxKind.GetAccessor:
                     case ts.SyntaxKind.SetAccessor:
                         var property = member;
-                        var propertyDecorators = getDecorators(property.decorators);
-                        if (propertyDecorators) {
+                        if (property.flags & ts.NodeFlags.Static) {
                             var name_2 = evaluator.nameOf(property.name);
                             if (!schema_1.isMetadataError(name_2)) {
-                                recordMember(name_2, { __symbolic: 'property', decorators: propertyDecorators });
+                                if (property.initializer) {
+                                    var value = evaluator.evaluateNode(property.initializer);
+                                    recordStaticMember(name_2, value);
+                                }
+                                else {
+                                    recordStaticMember(name_2, errorSym('Variable not initialized', property.name));
+                                }
+                            }
+                        }
+                        var propertyDecorators = getDecorators(property.decorators);
+                        if (propertyDecorators) {
+                            var name_3 = evaluator.nameOf(property.name);
+                            if (!schema_1.isMetadataError(name_3)) {
+                                recordMember(name_3, { __symbolic: 'property', decorators: propertyDecorators });
                             }
                         }
                         break;
@@ -213,23 +225,23 @@ var MetadataCollector = (function () {
                         else {
                             enumValue = evaluator.evaluateNode(member.initializer);
                         }
-                        var name_3 = undefined;
+                        var name_4 = undefined;
                         if (member.name.kind == ts.SyntaxKind.Identifier) {
                             var identifier = member.name;
-                            name_3 = identifier.text;
-                            enumValueHolder[name_3] = enumValue;
+                            name_4 = identifier.text;
+                            enumValueHolder[name_4] = enumValue;
                             writtenMembers++;
                         }
                         if (typeof enumValue === 'number') {
                             nextDefaultValue = enumValue + 1;
                         }
-                        else if (name_3) {
+                        else if (name_4) {
                             nextDefaultValue = {
                                 __symbolic: 'binary',
                                 operator: '+',
                                 left: {
                                     __symbolic: 'select',
-                                    expression: { __symbolic: 'reference', name: enumName }, name: name_3
+                                    expression: { __symbolic: 'reference', name: enumName }, name: name_4
                                 }
                             };
                         }
@@ -275,13 +287,13 @@ var MetadataCollector = (function () {
                             var report_1 = function (nameNode) {
                                 switch (nameNode.kind) {
                                     case ts.SyntaxKind.Identifier:
-                                        var name_4 = nameNode;
+                                        var name_5 = nameNode;
                                         var varValue = errorSym('Destructuring not supported', nameNode);
-                                        locals.define(name_4.text, varValue);
+                                        locals.define(name_5.text, varValue);
                                         if (node.flags & ts.NodeFlags.Export) {
                                             if (!metadata)
                                                 metadata = {};
-                                            metadata[name_4.text] = varValue;
+                                            metadata[name_5.text] = varValue;
                                         }
                                         break;
                                     case ts.SyntaxKind.BindingElement:
