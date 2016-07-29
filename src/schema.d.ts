@@ -3,7 +3,7 @@ export interface ModuleMetadata {
     __symbolic: 'module';
     version: number;
     metadata: {
-        [name: string]: (ClassMetadata | MetadataValue);
+        [name: string]: (ClassMetadata | FunctionMetadata | MetadataValue);
     };
 }
 export declare function isModuleMetadata(value: any): value is ModuleMetadata;
@@ -11,7 +11,9 @@ export interface ClassMetadata {
     __symbolic: 'class';
     decorators?: (MetadataSymbolicExpression | MetadataError)[];
     members?: MetadataMap;
-    statics?: MetadataObject;
+    statics?: {
+        [name: string]: MetadataValue | FunctionMetadata;
+    };
 }
 export declare function isClassMetadata(value: any): value is ClassMetadata;
 export interface MetadataMap {
@@ -35,7 +37,8 @@ export declare function isConstructorMetadata(value: any): value is ConstructorM
 export interface FunctionMetadata {
     __symbolic: 'function';
     parameters: string[];
-    result: MetadataValue;
+    defaults?: MetadataValue[];
+    value: MetadataValue;
 }
 export declare function isFunctionMetadata(value: any): value is FunctionMetadata;
 export declare type MetadataValue = string | number | boolean | MetadataObject | MetadataArray | MetadataSymbolicExpression | MetadataError;

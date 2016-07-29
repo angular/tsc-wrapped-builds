@@ -33,13 +33,16 @@ var MetadataCollector = (function () {
                     if (statement.kind === ts.SyntaxKind.ReturnStatement) {
                         var returnStatement = statement;
                         if (returnStatement.expression) {
-                            return {
-                                name: functionName, func: {
-                                    __symbolic: 'function',
-                                    parameters: namesOf(functionDeclaration.parameters),
-                                    value: evaluator.evaluateNode(returnStatement.expression)
-                                }
+                            var func = {
+                                __symbolic: 'function',
+                                parameters: namesOf(functionDeclaration.parameters),
+                                value: evaluator.evaluateNode(returnStatement.expression)
                             };
+                            if (functionDeclaration.parameters.some(function (p) { return p.initializer != null; })) {
+                                var defaults = [];
+                                func.defaults = functionDeclaration.parameters.map(function (p) { return p.initializer && evaluator.evaluateNode(p.initializer); });
+                            }
+                            return { func: func, name: functionName };
                         }
                     }
                 }

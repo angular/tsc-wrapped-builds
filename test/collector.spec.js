@@ -24,6 +24,7 @@ describe('Collector', function () {
             'static-method.ts',
             'static-method-call.ts',
             'static-method-with-if.ts',
+            'static-method-with-default.ts',
         ]);
         service = ts.createLanguageService(host, documentRegistry);
         program = service.getProgram();
@@ -397,6 +398,34 @@ describe('Collector', function () {
             }
         });
     });
+    it('should be able to collect a method with a default parameter', function () {
+        var source = program.getSourceFile('/static-method-with-default.ts');
+        var metadata = collector.getMetadata(source);
+        expect(metadata).toBeDefined();
+        var classData = metadata.metadata['MyModule'];
+        expect(classData).toBeDefined();
+        expect(classData.statics).toEqual({
+            with: {
+                __symbolic: 'function',
+                parameters: ['comp', 'foo', 'bar'],
+                defaults: [undefined, true, false],
+                value: [
+                    { __symbolic: 'reference', name: 'MyModule' }, {
+                        __symbolic: 'if',
+                        condition: { __symbolic: 'reference', name: 'foo' },
+                        thenExpression: { provider: 'a', useValue: { __symbolic: 'reference', name: 'comp' } },
+                        elseExpression: { provider: 'b', useValue: { __symbolic: 'reference', name: 'comp' } }
+                    },
+                    {
+                        __symbolic: 'if',
+                        condition: { __symbolic: 'reference', name: 'bar' },
+                        thenExpression: { provider: 'c', useValue: { __symbolic: 'reference', name: 'comp' } },
+                        elseExpression: { provider: 'd', useValue: { __symbolic: 'reference', name: 'comp' } }
+                    }
+                ]
+            }
+        });
+    });
 });
 // TODO: Do not use \` in a template literal as it confuses clang-format
 var FILES = {
@@ -426,6 +455,7 @@ var FILES = {
     'exported-enum.ts': "\n    import {constValue} from './exported-consts';\n\n    export const someValue = 30;\n    export enum SomeEnum { A, B, C = 100, D };\n    export enum ComplexEnum { A, B, C = someValue, D = someValue + 10, E = constValue };\n  ",
     'exported-consts.ts': "\n    export const constValue = 100;\n  ",
     'static-method.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(comp: any): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: comp }\n        ];\n      }\n    }\n  ",
+    'static-method-with-default.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(comp: any, foo: boolean = true, bar: boolean = false): any[] {\n        return [\n          MyModule,\n          foo ? { provider: 'a', useValue: comp } : {provider: 'b', useValue: comp},\n          bar ? { provider: 'c', useValue: comp } : {provider: 'd', useValue: comp}\n        ];\n      }\n    }\n  ",
     'static-method-call.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-method.ts';\n\n    @Component({\n      providers: MyModule.with('a')\n    })\n    export class Foo { }\n  ",
     'static-field.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static VALUE = 'Some string';\n    }\n  ",
     'static-field-reference.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-field.ts';\n\n    @Component({\n      providers: [ { provide: 'a', useValue: MyModule.VALUE } ]\n    })\n    export class Foo { }\n  ",
