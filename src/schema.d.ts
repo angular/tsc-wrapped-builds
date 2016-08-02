@@ -2,11 +2,19 @@ export declare const VERSION: number;
 export interface ModuleMetadata {
     __symbolic: 'module';
     version: number;
+    exports?: ModuleExportMetadata[];
     metadata: {
         [name: string]: (ClassMetadata | FunctionMetadata | MetadataValue);
     };
 }
 export declare function isModuleMetadata(value: any): value is ModuleMetadata;
+export interface ModuleExportMetadata {
+    export?: (string | {
+        name: string;
+        as: string;
+    })[];
+    from: string;
+}
 export interface ClassMetadata {
     __symbolic: 'class';
     decorators?: (MetadataSymbolicExpression | MetadataError)[];

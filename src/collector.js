@@ -17,6 +17,7 @@ var MetadataCollector = (function () {
         var locals = new symbols_1.Symbols(sourceFile);
         var evaluator = new evaluator_1.Evaluator(locals);
         var metadata;
+        var exports;
         function objFromDecorator(decoratorNode) {
             return evaluator.evaluateNode(decoratorNode.expression);
         }
@@ -187,6 +188,25 @@ var MetadataCollector = (function () {
         });
         ts.forEachChild(sourceFile, function (node) {
             switch (node.kind) {
+                case ts.SyntaxKind.ExportDeclaration:
+                    // Record export declarations
+                    var exportDeclaration = node;
+                    var moduleSpecifier = exportDeclaration.moduleSpecifier;
+                    if (moduleSpecifier && moduleSpecifier.kind == ts.SyntaxKind.StringLiteral) {
+                        // Ignore exports that don't have string literals as exports.
+                        // This is allowed by the syntax but will be flagged as an error by the type checker.
+                        var from = moduleSpecifier.text;
+                        var moduleExport = { from: from };
+                        if (exportDeclaration.exportClause) {
+                            moduleExport.export = exportDeclaration.exportClause.elements.map(function (element) { return element.propertyName ?
+                                { name: element.propertyName.text, as: element.name.text } :
+                                element.name.text; });
+                        }
+                        if (!exports)
+                            exports = [];
+                        exports.push(moduleExport);
+                    }
+                    break;
                 case ts.SyntaxKind.ClassDeclaration:
                     var classDeclaration = node;
                     var className = classDeclaration.name.text;
@@ -320,7 +340,14 @@ var MetadataCollector = (function () {
                     break;
             }
         });
-        return metadata && { __symbolic: 'module', version: schema_1.VERSION, metadata: metadata };
+        if (metadata || exports) {
+            if (!metadata)
+                metadata = {};
+            var result = { __symbolic: 'module', version: schema_1.VERSION, metadata: metadata };
+            if (exports)
+                result.exports = exports;
+            return result;
+        }
     };
     return MetadataCollector;
 }());
