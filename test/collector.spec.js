@@ -20,6 +20,7 @@ describe('Collector', function () {
             'exported-functions.ts',
             'exported-enum.ts',
             'exported-consts.ts',
+            'local-symbol-ref.ts',
             're-exports.ts',
             'static-field-reference.ts',
             'static-method.ts',
@@ -436,6 +437,27 @@ describe('Collector', function () {
             { from: 'angular2/core' }
         ]);
     });
+    it('should collect an error symbol if collecting a reference to a non-exported symbol', function () {
+        var source = program.getSourceFile('/local-symbol-ref.ts');
+        var metadata = collector.getMetadata(source);
+        expect(metadata.metadata).toEqual({
+            REQUIRED_VALIDATOR: {
+                __symbolic: 'error',
+                message: 'Reference to a local symbol',
+                line: 3,
+                character: 9,
+                context: { name: 'REQUIRED' }
+            },
+            SomeComponent: {
+                __symbolic: 'class',
+                decorators: [{
+                        __symbolic: 'call',
+                        expression: { __symbolic: 'reference', module: 'angular2/core', name: 'Component' },
+                        arguments: [{ providers: [{ __symbolic: 'reference', name: 'REQUIRED_VALIDATOR' }] }]
+                    }]
+            }
+        });
+    });
 });
 // TODO: Do not use \` in a template literal as it confuses clang-format
 var FILES = {
@@ -471,9 +493,10 @@ var FILES = {
     'static-field-reference.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-field.ts';\n\n    @Component({\n      providers: [ { provide: 'a', useValue: MyModule.VALUE } ]\n    })\n    export class Foo { }\n  ",
     'static-method-with-if.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(cond: boolean): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: cond ? '1' : '2' }\n        ];\n      }\n    }\n  ",
     're-exports.ts': "\n    export {MyModule} from './static-field';\n    export {Foo as OtherModule} from './static-field-reference.ts';\n    export * from 'angular2/core';\n  ",
+    'local-symbol-ref.ts': "\n    import {Component, Validators} from 'angular2/core';\n\n    const REQUIRED = Validators.required;\n\n    export const REQUIRED_VALIDATOR: any = {\n      provide: 'SomeToken',\n      useValue: REQUIRED,\n      multi: true\n    };\n\n    @Component({\n      providers: [REQUIRED_VALIDATOR]\n    })\n    export class SomeComponent {}\n  ",
     'node_modules': {
         'angular2': {
-            'core.d.ts': "\n          export interface Type extends Function { }\n          export interface TypeDecorator {\n              <T extends Type>(type: T): T;\n              (target: Object, propertyKey?: string | symbol, parameterIndex?: number): void;\n              annotations: any[];\n          }\n          export interface ComponentDecorator extends TypeDecorator { }\n          export interface ComponentFactory {\n              (obj: {\n                  selector?: string;\n                  inputs?: string[];\n                  outputs?: string[];\n                  properties?: string[];\n                  events?: string[];\n                  host?: {\n                      [key: string]: string;\n                  };\n                  bindings?: any[];\n                  providers?: any[];\n                  exportAs?: string;\n                  moduleId?: string;\n                  queries?: {\n                      [key: string]: any;\n                  };\n                  viewBindings?: any[];\n                  viewProviders?: any[];\n                  templateUrl?: string;\n                  template?: string;\n                  styleUrls?: string[];\n                  styles?: string[];\n                  directives?: Array<Type | any[]>;\n                  pipes?: Array<Type | any[]>;\n              }): ComponentDecorator;\n          }\n          export declare var Component: ComponentFactory;\n          export interface InputFactory {\n              (bindingPropertyName?: string): any;\n              new (bindingPropertyName?: string): any;\n          }\n          export declare var Input: InputFactory;\n          export interface InjectableFactory {\n              (): any;\n          }\n          export declare var Injectable: InjectableFactory;\n          export interface OnInit {\n              ngOnInit(): any;\n          }\n      ",
+            'core.d.ts': "\n          export interface Type extends Function { }\n          export interface TypeDecorator {\n              <T extends Type>(type: T): T;\n              (target: Object, propertyKey?: string | symbol, parameterIndex?: number): void;\n              annotations: any[];\n          }\n          export interface ComponentDecorator extends TypeDecorator { }\n          export interface ComponentFactory {\n              (obj: {\n                  selector?: string;\n                  inputs?: string[];\n                  outputs?: string[];\n                  properties?: string[];\n                  events?: string[];\n                  host?: {\n                      [key: string]: string;\n                  };\n                  bindings?: any[];\n                  providers?: any[];\n                  exportAs?: string;\n                  moduleId?: string;\n                  queries?: {\n                      [key: string]: any;\n                  };\n                  viewBindings?: any[];\n                  viewProviders?: any[];\n                  templateUrl?: string;\n                  template?: string;\n                  styleUrls?: string[];\n                  styles?: string[];\n                  directives?: Array<Type | any[]>;\n                  pipes?: Array<Type | any[]>;\n              }): ComponentDecorator;\n          }\n          export declare var Component: ComponentFactory;\n          export interface InputFactory {\n              (bindingPropertyName?: string): any;\n              new (bindingPropertyName?: string): any;\n          }\n          export declare var Input: InputFactory;\n          export interface InjectableFactory {\n              (): any;\n          }\n          export declare var Injectable: InjectableFactory;\n          export interface OnInit {\n              ngOnInit(): any;\n          }\n          export class Validators {\n            static required(): void;\n          }\n      ",
             'common.d.ts': "\n        export declare class NgFor {\n            ngForOf: any;\n            ngForTemplate: any;\n            ngDoCheck(): void;\n        }\n        export declare class LowerCasePipe  {\n          transform(value: string, args?: any[]): string;\n        }\n        export declare class UpperCasePipe {\n            transform(value: string, args?: any[]): string;\n        }\n      "
         }
     }
