@@ -11,7 +11,7 @@ function main(project, basePath, codegen) {
             projectDir = path.dirname(project);
         }
         // file names in tsconfig are resolved relative to this absolute path
-        basePath = path.join(process.cwd(), basePath || projectDir);
+        basePath = path.resolve(process.cwd(), basePath || projectDir);
         // read the configuration options from wherever you store them
         var _a = tsc_1.tsc.readConfiguration(project, basePath), parsed_1 = _a.parsed, ngOptions_1 = _a.ngOptions;
         ngOptions_1.basePath = basePath;
