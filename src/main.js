@@ -4,14 +4,15 @@ var path = require('path');
 var ts = require('typescript');
 var tsc_1 = require('./tsc');
 var compiler_host_1 = require('./compiler_host');
-function main(project, basePath, codegen) {
+var cli_options_1 = require('./cli_options');
+function main(project, cliOptions, codegen) {
     try {
         var projectDir = project;
         if (fs.lstatSync(project).isFile()) {
             projectDir = path.dirname(project);
         }
         // file names in tsconfig are resolved relative to this absolute path
-        basePath = path.resolve(process.cwd(), basePath || projectDir);
+        var basePath = path.resolve(process.cwd(), cliOptions.basePath || projectDir);
         // read the configuration options from wherever you store them
         var _a = tsc_1.tsc.readConfiguration(project, basePath), parsed_1 = _a.parsed, ngOptions_1 = _a.ngOptions;
         ngOptions_1.basePath = basePath;
@@ -22,7 +23,7 @@ function main(project, basePath, codegen) {
         if (ngOptions_1.skipTemplateCodegen || !codegen) {
             codegen = function () { return Promise.resolve(null); };
         }
-        return codegen(ngOptions_1, program_1, host_1).then(function () {
+        return codegen(ngOptions_1, cliOptions, program_1, host_1).then(function () {
             // Create a new program since codegen files were created after making the old program
             var newProgram = ts.createProgram(parsed_1.fileNames, parsed_1.options, host_1, program_1);
             tsc_1.tsc.typeCheck(host_1, newProgram);
@@ -48,9 +49,9 @@ exports.main = main;
 // CLI entry point
 if (require.main === module) {
     var args_1 = require('minimist')(process.argv.slice(2));
-    main(args_1.p || args_1.project || '.', args_1.basePath)
-        .then(function (exitCode) { return process.exit(exitCode); })
-        .catch(function (e) {
+    var project = args_1.p || args_1.project || '.';
+    var cliOptions = new cli_options_1.CliOptions(args_1);
+    main(project, cliOptions).then(function (exitCode) { return process.exit(exitCode); }).catch(function (e) {
         console.error(e.stack);
         console.error('Compilation failed');
         process.exit(1);
