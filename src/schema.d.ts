@@ -2,15 +2,26 @@ export declare const VERSION: number;
 export interface ModuleMetadata {
     __symbolic: 'module';
     version: number;
+    exports?: ModuleExportMetadata[];
     metadata: {
-        [name: string]: (ClassMetadata | MetadataValue);
+        [name: string]: (ClassMetadata | FunctionMetadata | MetadataValue);
     };
 }
 export declare function isModuleMetadata(value: any): value is ModuleMetadata;
+export interface ModuleExportMetadata {
+    export?: (string | {
+        name: string;
+        as: string;
+    })[];
+    from: string;
+}
 export interface ClassMetadata {
     __symbolic: 'class';
     decorators?: (MetadataSymbolicExpression | MetadataError)[];
     members?: MetadataMap;
+    statics?: {
+        [name: string]: MetadataValue | FunctionMetadata;
+    };
 }
 export declare function isClassMetadata(value: any): value is ClassMetadata;
 export interface MetadataMap {
@@ -34,7 +45,8 @@ export declare function isConstructorMetadata(value: any): value is ConstructorM
 export interface FunctionMetadata {
     __symbolic: 'function';
     parameters: string[];
-    result: MetadataValue;
+    defaults?: MetadataValue[];
+    value: MetadataValue;
 }
 export declare function isFunctionMetadata(value: any): value is FunctionMetadata;
 export declare type MetadataValue = string | number | boolean | MetadataObject | MetadataArray | MetadataSymbolicExpression | MetadataError;
@@ -45,7 +57,7 @@ export interface MetadataArray {
     [name: number]: MetadataValue;
 }
 export interface MetadataSymbolicExpression {
-    __symbolic: 'binary' | 'call' | 'index' | 'new' | 'pre' | 'reference' | 'select' | 'spread';
+    __symbolic: 'binary' | 'call' | 'index' | 'new' | 'pre' | 'reference' | 'select' | 'spread' | 'if';
 }
 export declare function isMetadataSymbolicExpression(value: any): value is MetadataSymbolicExpression;
 export interface MetadataSymbolicBinaryExpression extends MetadataSymbolicExpression {
@@ -73,6 +85,13 @@ export interface MetadataSymbolicPrefixExpression extends MetadataSymbolicExpres
     operand: MetadataValue;
 }
 export declare function isMetadataSymbolicPrefixExpression(value: any): value is MetadataSymbolicPrefixExpression;
+export interface MetadataSymbolicIfExpression extends MetadataSymbolicExpression {
+    __symbolic: 'if';
+    condition: MetadataValue;
+    thenExpression: MetadataValue;
+    elseExpression: MetadataValue;
+}
+export declare function isMetadataSymbolicIfExpression(value: any): value is MetadataSymbolicIfExpression;
 export interface MetadataGlobalReferenceExpression extends MetadataSymbolicExpression {
     __symbolic: 'reference';
     name: string;
