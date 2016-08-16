@@ -490,15 +490,6 @@ var Evaluator = (function () {
                     };
                 }
                 break;
-            case ts.SyntaxKind.ConditionalExpression:
-                var conditionalExpression = node;
-                var condition = this.evaluateNode(conditionalExpression.condition);
-                var thenExpression = this.evaluateNode(conditionalExpression.whenTrue);
-                var elseExpression = this.evaluateNode(conditionalExpression.whenFalse);
-                if (isPrimitive(condition)) {
-                    return condition ? thenExpression : elseExpression;
-                }
-                return { __symbolic: 'if', condition: condition, thenExpression: thenExpression, elseExpression: elseExpression };
             case ts.SyntaxKind.FunctionExpression:
             case ts.SyntaxKind.ArrowFunction:
                 return errorSymbol('Function call not supported', node);

@@ -49,7 +49,6 @@ function isMetadataSymbolicExpression(value) {
             case 'reference':
             case 'select':
             case 'spread':
-            case 'if':
                 return true;
         }
     }
@@ -72,10 +71,6 @@ function isMetadataSymbolicPrefixExpression(value) {
     return value && value.__symbolic === 'pre';
 }
 exports.isMetadataSymbolicPrefixExpression = isMetadataSymbolicPrefixExpression;
-function isMetadataSymbolicIfExpression(value) {
-    return value && value.__symbolic === 'if';
-}
-exports.isMetadataSymbolicIfExpression = isMetadataSymbolicIfExpression;
 function isMetadataGlobalReferenceExpression(value) {
     return isMetadataSymbolicReferenceExpression(value) && value.name && !value.module;
 }
