@@ -6,5 +6,6 @@ interface Options extends ts.CompilerOptions {
     skipTemplateCodegen: boolean;
     trace: boolean;
     debug?: boolean;
+    writeImportsForRootDirs?: boolean;
 }
 export default Options;
