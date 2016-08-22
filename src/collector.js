@@ -234,49 +234,51 @@ var MetadataCollector = (function () {
                     // Otherwise don't record the function.
                     break;
                 case ts.SyntaxKind.EnumDeclaration:
-                    var enumDeclaration = node;
-                    var enumValueHolder = {};
-                    var enumName = enumDeclaration.name.text;
-                    var nextDefaultValue = 0;
-                    var writtenMembers = 0;
-                    for (var _i = 0, _a = enumDeclaration.members; _i < _a.length; _i++) {
-                        var member = _a[_i];
-                        var enumValue = void 0;
-                        if (!member.initializer) {
-                            enumValue = nextDefaultValue;
+                    if (node.flags & ts.NodeFlags.Export) {
+                        var enumDeclaration = node;
+                        var enumValueHolder = {};
+                        var enumName = enumDeclaration.name.text;
+                        var nextDefaultValue = 0;
+                        var writtenMembers = 0;
+                        for (var _i = 0, _a = enumDeclaration.members; _i < _a.length; _i++) {
+                            var member = _a[_i];
+                            var enumValue = void 0;
+                            if (!member.initializer) {
+                                enumValue = nextDefaultValue;
+                            }
+                            else {
+                                enumValue = evaluator.evaluateNode(member.initializer);
+                            }
+                            var name_4 = undefined;
+                            if (member.name.kind == ts.SyntaxKind.Identifier) {
+                                var identifier = member.name;
+                                name_4 = identifier.text;
+                                enumValueHolder[name_4] = enumValue;
+                                writtenMembers++;
+                            }
+                            if (typeof enumValue === 'number') {
+                                nextDefaultValue = enumValue + 1;
+                            }
+                            else if (name_4) {
+                                nextDefaultValue = {
+                                    __symbolic: 'binary',
+                                    operator: '+',
+                                    left: {
+                                        __symbolic: 'select',
+                                        expression: { __symbolic: 'reference', name: enumName }, name: name_4
+                                    }
+                                };
+                            }
+                            else {
+                                nextDefaultValue = errorSym('Unsuppported enum member name', member.name);
+                            }
+                            ;
                         }
-                        else {
-                            enumValue = evaluator.evaluateNode(member.initializer);
+                        if (writtenMembers) {
+                            if (!metadata)
+                                metadata = {};
+                            metadata[enumName] = enumValueHolder;
                         }
-                        var name_4 = undefined;
-                        if (member.name.kind == ts.SyntaxKind.Identifier) {
-                            var identifier = member.name;
-                            name_4 = identifier.text;
-                            enumValueHolder[name_4] = enumValue;
-                            writtenMembers++;
-                        }
-                        if (typeof enumValue === 'number') {
-                            nextDefaultValue = enumValue + 1;
-                        }
-                        else if (name_4) {
-                            nextDefaultValue = {
-                                __symbolic: 'binary',
-                                operator: '+',
-                                left: {
-                                    __symbolic: 'select',
-                                    expression: { __symbolic: 'reference', name: enumName }, name: name_4
-                                }
-                            };
-                        }
-                        else {
-                            nextDefaultValue = errorSym('Unsuppported enum member name', member.name);
-                        }
-                        ;
-                    }
-                    if (writtenMembers) {
-                        if (!metadata)
-                            metadata = {};
-                        metadata[enumName] = enumValueHolder;
                     }
                     break;
                 case ts.SyntaxKind.VariableStatement:

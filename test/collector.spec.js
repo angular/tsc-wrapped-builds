@@ -21,6 +21,7 @@ describe('Collector', function () {
             'exported-enum.ts',
             'exported-consts.ts',
             'local-symbol-ref.ts',
+            'private-enum.ts',
             're-exports.ts',
             'static-field-reference.ts',
             'static-method.ts',
@@ -296,6 +297,14 @@ describe('Collector', function () {
         var someEnum = metadata.metadata['SomeEnum'];
         expect(someEnum).toEqual({ A: 0, B: 1, C: 100, D: 101 });
     });
+    it('should ignore a non-export enum', function () {
+        var enumSource = program.getSourceFile('/private-enum.ts');
+        var metadata = collector.getMetadata(enumSource);
+        var publicEnum = metadata.metadata['PublicEnum'];
+        var privateEnum = metadata.metadata['PrivateEnum'];
+        expect(publicEnum).toEqual({ a: 0, b: 1, c: 2 });
+        expect(privateEnum).toBeUndefined();
+    });
     it('should be able to collect enums initialized from consts', function () {
         var enumSource = program.getSourceFile('/exported-enum.ts');
         var metadata = collector.getMetadata(enumSource);
@@ -494,6 +503,7 @@ var FILES = {
     'static-method-with-if.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(cond: boolean): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: cond ? '1' : '2' }\n        ];\n      }\n    }\n  ",
     're-exports.ts': "\n    export {MyModule} from './static-field';\n    export {Foo as OtherModule} from './static-field-reference.ts';\n    export * from 'angular2/core';\n  ",
     'local-symbol-ref.ts': "\n    import {Component, Validators} from 'angular2/core';\n\n    const REQUIRED = Validators.required;\n\n    export const REQUIRED_VALIDATOR: any = {\n      provide: 'SomeToken',\n      useValue: REQUIRED,\n      multi: true\n    };\n\n    @Component({\n      providers: [REQUIRED_VALIDATOR]\n    })\n    export class SomeComponent {}\n  ",
+    'private-enum.ts': "\n    export enum PublicEnum { a, b, c }\n    enum PrivateEnum { e, f, g }\n  ",
     'node_modules': {
         'angular2': {
             'core.d.ts': "\n          export interface Type extends Function { }\n          export interface TypeDecorator {\n              <T extends Type>(type: T): T;\n              (target: Object, propertyKey?: string | symbol, parameterIndex?: number): void;\n              annotations: any[];\n          }\n          export interface ComponentDecorator extends TypeDecorator { }\n          export interface ComponentFactory {\n              (obj: {\n                  selector?: string;\n                  inputs?: string[];\n                  outputs?: string[];\n                  properties?: string[];\n                  events?: string[];\n                  host?: {\n                      [key: string]: string;\n                  };\n                  bindings?: any[];\n                  providers?: any[];\n                  exportAs?: string;\n                  moduleId?: string;\n                  queries?: {\n                      [key: string]: any;\n                  };\n                  viewBindings?: any[];\n                  viewProviders?: any[];\n                  templateUrl?: string;\n                  template?: string;\n                  styleUrls?: string[];\n                  styles?: string[];\n                  directives?: Array<Type | any[]>;\n                  pipes?: Array<Type | any[]>;\n              }): ComponentDecorator;\n          }\n          export declare var Component: ComponentFactory;\n          export interface InputFactory {\n              (bindingPropertyName?: string): any;\n              new (bindingPropertyName?: string): any;\n          }\n          export declare var Input: InputFactory;\n          export interface InjectableFactory {\n              (): any;\n          }\n          export declare var Injectable: InjectableFactory;\n          export interface OnInit {\n              ngOnInit(): any;\n          }\n          export class Validators {\n            static required(): void;\n          }\n      ",
