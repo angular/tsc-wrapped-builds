@@ -36,7 +36,7 @@ function main(project, cliOptions, codegen) {
                 // decorators which we want to read or document.
                 // Do this emit second since TypeScript will create missing directories for us
                 // in the standard emit.
-                var metadataWriter = new compiler_host_1.MetadataWriterHost(host_1, newProgram);
+                var metadataWriter = new compiler_host_1.MetadataWriterHost(host_1, newProgram, ngOptions_1);
                 tsc_1.tsc.emit(metadataWriter, newProgram);
             }
         });

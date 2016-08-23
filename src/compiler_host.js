@@ -72,10 +72,11 @@ exports.TsickleHost = TsickleHost;
 var IGNORED_FILES = /\.ngfactory\.js$|\.css\.js$|\.css\.shim\.js$/;
 var MetadataWriterHost = (function (_super) {
     __extends(MetadataWriterHost, _super);
-    function MetadataWriterHost(delegate, program) {
+    function MetadataWriterHost(delegate, program, ngOptions) {
         var _this = this;
         _super.call(this, delegate);
         this.program = program;
+        this.ngOptions = ngOptions;
         this.metadataCollector = new collector_1.MetadataCollector();
         this.writeFile = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
             if (/\.d\.ts$/.test(fileName)) {
@@ -104,7 +105,7 @@ var MetadataWriterHost = (function (_super) {
         // released
         if (/\.js$/.test(emitFilePath)) {
             var path_1 = emitFilePath.replace(/*DTS*/ /\.js$/, '.metadata.json');
-            var metadata = this.metadataCollector.getMetadata(sourceFile);
+            var metadata = this.metadataCollector.getMetadata(sourceFile, !!this.ngOptions.strictMetadataEmit);
             if (metadata && metadata.metadata) {
                 var metadataText = JSON.stringify(metadata);
                 fs_1.writeFileSync(path_1, metadataText, { encoding: 'utf-8' });
