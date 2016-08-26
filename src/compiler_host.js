@@ -26,6 +26,9 @@ var DelegatingHost = (function () {
         this.getDefaultLibLocation = function () { return _this.delegate.getDefaultLibLocation(); };
         this.writeFile = this.delegate.writeFile;
         this.getCurrentDirectory = function () { return _this.delegate.getCurrentDirectory(); };
+        this.getDirectories = function (path) {
+            return _this.delegate.getDirectories ? _this.delegate.getDirectories(path) : [];
+        };
         this.getCanonicalFileName = function (fileName) { return _this.delegate.getCanonicalFileName(fileName); };
         this.useCaseSensitiveFileNames = function () { return _this.delegate.useCaseSensitiveFileNames(); };
         this.getNewLine = function () { return _this.delegate.getNewLine(); };

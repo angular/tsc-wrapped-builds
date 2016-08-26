@@ -13,6 +13,7 @@ export declare abstract class DelegatingHost implements ts.CompilerHost {
     getDefaultLibLocation: () => string;
     writeFile: ts.WriteFileCallback;
     getCurrentDirectory: () => string;
+    getDirectories: (path: string) => string[];
     getCanonicalFileName: (fileName: string) => string;
     useCaseSensitiveFileNames: () => boolean;
     getNewLine: () => string;
