@@ -17,6 +17,10 @@ function main(project, cliOptions, codegen) {
         var _a = tsc_1.tsc.readConfiguration(project, basePath), parsed_1 = _a.parsed, ngOptions_1 = _a.ngOptions;
         ngOptions_1.basePath = basePath;
         var host_1 = ts.createCompilerHost(parsed_1.options, true);
+        // HACK: patch the realpath to solve symlink issue here:
+        // https://github.com/Microsoft/TypeScript/issues/9552
+        // todo(misko): remove once facade symlinks are removed
+        host_1.realpath = function (path) { return path; };
         var program_1 = ts.createProgram(parsed_1.fileNames, parsed_1.options, host_1);
         var errors = program_1.getOptionsDiagnostics();
         tsc_1.check(errors);

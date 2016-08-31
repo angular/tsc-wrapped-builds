@@ -351,7 +351,7 @@ describe('Collector', function () {
                             __symbolic: 'call',
                             expression: {
                                 __symbolic: 'select',
-                                expression: { __symbolic: 'reference', module: './static-method.ts', name: 'MyModule' },
+                                expression: { __symbolic: 'reference', module: './static-method', name: 'MyModule' },
                                 member: 'with'
                             },
                             arguments: ['a']
@@ -381,7 +381,7 @@ describe('Collector', function () {
                                 provide: 'a',
                                 useValue: {
                                     __symbolic: 'select',
-                                    expression: { __symbolic: 'reference', module: './static-field.ts', name: 'MyModule' },
+                                    expression: { __symbolic: 'reference', module: './static-field', name: 'MyModule' },
                                     member: 'VALUE'
                                 }
                             }]
@@ -445,7 +445,7 @@ describe('Collector', function () {
         var metadata = collector.getMetadata(source);
         expect(metadata.exports).toEqual([
             { from: './static-field', export: ['MyModule'] },
-            { from: './static-field-reference.ts', export: [{ name: 'Foo', as: 'OtherModule' }] },
+            { from: './static-field-reference', export: [{ name: 'Foo', as: 'OtherModule' }] },
             { from: 'angular2/core' }
         ]);
     });
@@ -554,11 +554,11 @@ var FILES = {
     'exported-consts.ts': "\n    export const constValue = 100;\n  ",
     'static-method.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(comp: any): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: comp }\n        ];\n      }\n    }\n  ",
     'static-method-with-default.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(comp: any, foo: boolean = true, bar: boolean = false): any[] {\n        return [\n          MyModule,\n          foo ? { provider: 'a', useValue: comp } : {provider: 'b', useValue: comp},\n          bar ? { provider: 'c', useValue: comp } : {provider: 'd', useValue: comp}\n        ];\n      }\n    }\n  ",
-    'static-method-call.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-method.ts';\n\n    @Component({\n      providers: MyModule.with('a')\n    })\n    export class Foo { }\n  ",
+    'static-method-call.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-method';\n\n    @Component({\n      providers: MyModule.with('a')\n    })\n    export class Foo { }\n  ",
     'static-field.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static VALUE = 'Some string';\n    }\n  ",
-    'static-field-reference.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-field.ts';\n\n    @Component({\n      providers: [ { provide: 'a', useValue: MyModule.VALUE } ]\n    })\n    export class Foo { }\n  ",
+    'static-field-reference.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-field';\n\n    @Component({\n      providers: [ { provide: 'a', useValue: MyModule.VALUE } ]\n    })\n    export class Foo { }\n  ",
     'static-method-with-if.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(cond: boolean): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: cond ? '1' : '2' }\n        ];\n      }\n    }\n  ",
-    're-exports.ts': "\n    export {MyModule} from './static-field';\n    export {Foo as OtherModule} from './static-field-reference.ts';\n    export * from 'angular2/core';\n  ",
+    're-exports.ts': "\n    export {MyModule} from './static-field';\n    export {Foo as OtherModule} from './static-field-reference';\n    export * from 'angular2/core';\n  ",
     'local-symbol-ref.ts': "\n    import {Component, Validators} from 'angular2/core';\n\n    var REQUIRED;\n\n    export const REQUIRED_VALIDATOR: any = {\n      provide: 'SomeToken',\n      useValue: REQUIRED,\n      multi: true\n    };\n\n    @Component({\n      providers: [REQUIRED_VALIDATOR]\n    })\n    export class SomeComponent {}\n  ",
     'private-enum.ts': "\n    export enum PublicEnum { a, b, c }\n    enum PrivateEnum { e, f, g }\n  ",
     'local-function-ref.ts': "\n    import {Component, Validators} from 'angular2/core';\n\n    function required() {}\n\n    export const REQUIRED_VALIDATOR: any = {\n      provide: 'SomeToken',\n      useValue: required,\n      multi: true\n    };\n\n    @Component({\n      providers: [REQUIRED_VALIDATOR]\n    })\n    export class SomeComponent {}\n  ",
