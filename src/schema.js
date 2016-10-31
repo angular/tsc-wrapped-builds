@@ -1,5 +1,12 @@
-// Metadata Schema
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 "use strict";
+// Metadata Schema
 // If you make a backwards incompatible change to the schema, increment the VERSION number.
 // If you make a backwards compatible change to the metadata (such as adding an option field) then
 // leave VERSION the same. If possible, as many versions of the metadata that can represent the
