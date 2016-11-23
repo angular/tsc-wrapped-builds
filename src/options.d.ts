@@ -7,15 +7,13 @@
  */
 import * as ts from 'typescript';
 interface Options extends ts.CompilerOptions {
-    genDir?: string;
-    basePath?: string;
-    skipMetadataEmit?: boolean;
-    strictMetadataEmit?: boolean;
-    skipTemplateCodegen?: boolean;
+    genDir: string;
+    basePath: string;
+    skipMetadataEmit: boolean;
+    strictMetadataEmit: boolean;
+    skipTemplateCodegen: boolean;
     generateCodeForLibraries?: boolean;
-    annotateForClosureCompiler?: boolean;
-    annotationsAs?: 'decorators' | 'static fields';
-    trace?: boolean;
+    trace: boolean;
     debug?: boolean;
 }
 export default Options;
