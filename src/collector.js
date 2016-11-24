@@ -238,10 +238,13 @@ var MetadataCollector = (function () {
                     if (classDeclaration.name) {
                         var className = classDeclaration.name.text;
                         if (node.flags & ts.NodeFlags.Export) {
+                            if (!metadata)
+                                metadata = {};
                             if (classDeclaration.decorators) {
-                                if (!metadata)
-                                    metadata = {};
                                 metadata[className] = classMetadataOf(classDeclaration);
+                            }
+                            else {
+                                metadata[className] = { __symbolic: 'class' };
                             }
                         }
                     }
@@ -252,11 +255,16 @@ var MetadataCollector = (function () {
                     // names substitution will be performed by the StaticReflector.
                     var functionDeclaration = node;
                     if (node.flags & ts.NodeFlags.Export) {
+                        if (!metadata)
+                            metadata = {};
                         var maybeFunc = maybeGetSimpleFunction(functionDeclaration);
                         if (maybeFunc) {
-                            if (!metadata)
-                                metadata = {};
                             metadata[maybeFunc.name] = recordEntry(maybeFunc.func, node);
+                        }
+                        else if (functionDeclaration.name.kind == ts.SyntaxKind.Identifier) {
+                            var nameNode = functionDeclaration.name;
+                            var functionName = nameNode.text;
+                            metadata[functionName] = { __symbolic: 'function' };
                         }
                     }
                     break;
