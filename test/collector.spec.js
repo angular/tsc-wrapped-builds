@@ -39,6 +39,9 @@ describe('Collector', function () {
             'static-method-call.ts',
             'static-method-with-if.ts',
             'static-method-with-default.ts',
+            'class-inheritance.ts',
+            'class-inheritance-parent.ts',
+            'class-inheritance-declarations.d.ts'
         ]);
         service = ts.createLanguageService(host, documentRegistry);
         program = service.getProgram();
@@ -555,6 +558,29 @@ describe('Collector', function () {
             expect(function () { return collector.getMetadata(invalidFunction); }).not.toThrow();
         });
     });
+    describe('inheritance', function () {
+        it('should record `extends` clauses for declared classes', function () {
+            var metadata = collector.getMetadata(program.getSourceFile('/class-inheritance.ts'));
+            expect(metadata.metadata['DeclaredChildClass'])
+                .toEqual({ __symbolic: 'class', extends: { __symbolic: 'reference', name: 'ParentClass' } });
+        });
+        it('should record `extends` clauses for classes in the same file', function () {
+            var metadata = collector.getMetadata(program.getSourceFile('/class-inheritance.ts'));
+            expect(metadata.metadata['ChildClassSameFile'])
+                .toEqual({ __symbolic: 'class', extends: { __symbolic: 'reference', name: 'ParentClass' } });
+        });
+        it('should record `extends` clauses for classes in a different file', function () {
+            var metadata = collector.getMetadata(program.getSourceFile('/class-inheritance.ts'));
+            expect(metadata.metadata['ChildClassOtherFile']).toEqual({
+                __symbolic: 'class',
+                extends: {
+                    __symbolic: 'reference',
+                    module: './class-inheritance-parent',
+                    name: 'ParentClassFromOtherFile'
+                }
+            });
+        });
+    });
     function override(fileName, content) {
         host.overrideFile(fileName, content);
         host.addFile(fileName);
@@ -586,15 +612,17 @@ var FILES = {
     'unsupported-2.ts': "\n    import {Injectable} from 'angular2/core';\n\n    class Foo {}\n\n    @Injectable()\n    export class Bar {\n      constructor(private f: Foo) {}\n    }\n  ",
     'import-star.ts': "\n    import {Injectable} from 'angular2/core';\n    import * as common from 'angular2/common';\n\n    @Injectable()\n    export class SomeClass {\n      constructor(private f: common.NgFor) {}\n    }\n  ",
     'exported-classes.ts': "\n    export class SimpleClass {}\n    export abstract class AbstractClass {}\n    export declare class DeclaredClass {}\n  ",
+    'class-inheritance-parent.ts': "\n    export class ParentClassFromOtherFile {}\n  ",
+    'class-inheritance.ts': "\n    import {ParentClassFromOtherFile} from './class-inheritance-parent';\n\n    export class ParentClass {}\n\n    export declare class DeclaredChildClass extends ParentClass {}\n\n    export class ChildClassSameFile extends ParentClass {}\n\n    export class ChildClassOtherFile extends ParentClassFromOtherFile {}\n  ",
     'exported-functions.ts': "\n    export function one(a: string, b: string, c: string) {\n      return {a: a, b: b, c: c};\n    }\n    export function two(a: string, b: string, c: string) {\n      return {a, b, c};\n    }\n    export function three({a, b, c}: {a: string, b: string, c: string}) {\n      return [a, b, c];\n    }\n    export function supportsState(): boolean {\n     return !!window.history.pushState;\n    }\n    export function complexFn(x: any): boolean {\n      if (x) {\n        return true;\n      } else {\n        return false;\n      }\n    }\n    export declare function declaredFn();\n  ",
     'exported-enum.ts': "\n    import {constValue} from './exported-consts';\n\n    export const someValue = 30;\n    export enum SomeEnum { A, B, C = 100, D };\n    export enum ComplexEnum { A, B, C = someValue, D = someValue + 10, E = constValue };\n  ",
     'exported-consts.ts': "\n    export const constValue = 100;\n  ",
-    'static-method.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(comp: any): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: comp }\n        ];\n      }\n    }\n  ",
-    'static-method-with-default.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(comp: any, foo: boolean = true, bar: boolean = false): any[] {\n        return [\n          MyModule,\n          foo ? { provider: 'a', useValue: comp } : {provider: 'b', useValue: comp},\n          bar ? { provider: 'c', useValue: comp } : {provider: 'd', useValue: comp}\n        ];\n      }\n    }\n  ",
+    'static-method.ts': "\n    export class MyModule {\n      static with(comp: any): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: comp }\n        ];\n      }\n    }\n  ",
+    'static-method-with-default.ts': "\n    export class MyModule {\n      static with(comp: any, foo: boolean = true, bar: boolean = false): any[] {\n        return [\n          MyModule,\n          foo ? { provider: 'a', useValue: comp } : {provider: 'b', useValue: comp},\n          bar ? { provider: 'c', useValue: comp } : {provider: 'd', useValue: comp}\n        ];\n      }\n    }\n  ",
     'static-method-call.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-method';\n\n    @Component({\n      providers: MyModule.with('a')\n    })\n    export class Foo { }\n  ",
-    'static-field.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static VALUE = 'Some string';\n    }\n  ",
+    'static-field.ts': "\n    export class MyModule {\n      static VALUE = 'Some string';\n    }\n  ",
     'static-field-reference.ts': "\n    import {Component} from 'angular2/core';\n    import {MyModule} from './static-field';\n\n    @Component({\n      providers: [ { provide: 'a', useValue: MyModule.VALUE } ]\n    })\n    export class Foo { }\n  ",
-    'static-method-with-if.ts': "\n    import {Injectable} from 'angular2/core';\n\n    @Injectable()\n    export class MyModule {\n      static with(cond: boolean): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: cond ? '1' : '2' }\n        ];\n      }\n    }\n  ",
+    'static-method-with-if.ts': "\n    export class MyModule {\n      static with(cond: boolean): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: cond ? '1' : '2' }\n        ];\n      }\n    }\n  ",
     're-exports.ts': "\n    export {MyModule} from './static-field';\n    export {Foo as OtherModule} from './static-field-reference';\n    export * from 'angular2/core';\n  ",
     'local-symbol-ref.ts': "\n    import {Component, Validators} from 'angular2/core';\n\n    var REQUIRED;\n\n    export const REQUIRED_VALIDATOR: any = {\n      provide: 'SomeToken',\n      useValue: REQUIRED,\n      multi: true\n    };\n\n    @Component({\n      providers: [REQUIRED_VALIDATOR]\n    })\n    export class SomeComponent {}\n  ",
     'private-enum.ts': "\n    export enum PublicEnum { a, b, c }\n    enum PrivateEnum { e, f, g }\n  ",
