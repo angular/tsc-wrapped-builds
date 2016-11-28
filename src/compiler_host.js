@@ -148,8 +148,19 @@ var MetadataWriterHost = (function (_super) {
         if (/\.js$/.test(emitFilePath)) {
             var path_1 = emitFilePath.replace(/*DTS*/ /\.js$/, '.metadata.json');
             var metadata = this.metadataCollector.getMetadata(sourceFile, !!this.ngOptions.strictMetadataEmit);
+            var metadatas = [metadata];
             if (metadata && metadata.metadata) {
-                var metadataText = JSON.stringify(metadata);
+                if (metadata.version === 2) {
+                    // Also emit a version 1 so that older clients can consume new metadata files as well.
+                    // We can write the same data as version 2 is a strict super set.
+                    metadatas.push({
+                        __symbolic: metadata.__symbolic,
+                        exports: metadata.exports,
+                        metadata: metadata.metadata,
+                        version: 1
+                    });
+                }
+                var metadataText = JSON.stringify(metadatas);
                 fs_1.writeFileSync(path_1, metadataText, { encoding: 'utf-8' });
             }
         }
