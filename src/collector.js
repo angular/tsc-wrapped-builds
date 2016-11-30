@@ -79,14 +79,6 @@ var MetadataCollector = (function () {
                     return errorSym('Symbol reference expected', node);
                 }
             }
-            // Add class parents
-            if (classDeclaration.heritageClauses) {
-                classDeclaration.heritageClauses.forEach(function (hc) {
-                    if (hc.token === ts.SyntaxKind.ExtendsKeyword && hc.types) {
-                        hc.types.forEach(function (type) { return result.extends = referenceFrom(type.expression); });
-                    }
-                });
-            }
             // Add class decorators
             if (classDeclaration.decorators) {
                 result.decorators = getDecorators(classDeclaration.decorators);
@@ -190,7 +182,8 @@ var MetadataCollector = (function () {
             if (statics) {
                 result.statics = statics;
             }
-            return recordEntry(result, classDeclaration);
+            return result.decorators || members || statics ? recordEntry(result, classDeclaration) :
+                undefined;
         }
         // Predeclare classes and functions
         ts.forEachChild(sourceFile, function (node) {
@@ -245,9 +238,11 @@ var MetadataCollector = (function () {
                     if (classDeclaration.name) {
                         var className = classDeclaration.name.text;
                         if (node.flags & ts.NodeFlags.Export) {
-                            if (!metadata)
-                                metadata = {};
-                            metadata[className] = classMetadataOf(classDeclaration);
+                            if (classDeclaration.decorators) {
+                                if (!metadata)
+                                    metadata = {};
+                                metadata[className] = classMetadataOf(classDeclaration);
+                            }
                         }
                     }
                     // Otherwise don't record metadata for the class.
@@ -257,16 +252,11 @@ var MetadataCollector = (function () {
                     // names substitution will be performed by the StaticReflector.
                     var functionDeclaration = node;
                     if (node.flags & ts.NodeFlags.Export) {
-                        if (!metadata)
-                            metadata = {};
                         var maybeFunc = maybeGetSimpleFunction(functionDeclaration);
                         if (maybeFunc) {
+                            if (!metadata)
+                                metadata = {};
                             metadata[maybeFunc.name] = recordEntry(maybeFunc.func, node);
-                        }
-                        else if (functionDeclaration.name.kind == ts.SyntaxKind.Identifier) {
-                            var nameNode = functionDeclaration.name;
-                            var functionName = nameNode.text;
-                            metadata[functionName] = { __symbolic: 'function' };
                         }
                     }
                     break;
@@ -472,15 +462,14 @@ function validateMetadata(sourceFile, nodeMap, metadata) {
             }
         }
     }
-    function validateMember(classData, member) {
+    function validateMember(member) {
         if (member.decorators) {
             member.decorators.forEach(validateExpression);
         }
         if (schema_1.isMethodMetadata(member) && member.parameterDecorators) {
             member.parameterDecorators.forEach(validateExpression);
         }
-        // Only validate parameters of classes for which we know that are used with our DI
-        if (classData.decorators && schema_1.isConstructorMetadata(member) && member.parameters) {
+        if (schema_1.isConstructorMetadata(member) && member.parameters) {
             member.parameters.forEach(validateExpression);
         }
     }
@@ -490,7 +479,7 @@ function validateMetadata(sourceFile, nodeMap, metadata) {
         }
         if (classData.members) {
             Object.getOwnPropertyNames(classData.members)
-                .forEach(function (name) { return classData.members[name].forEach(function (m) { return validateMember(classData, m); }); });
+                .forEach(function (name) { return classData.members[name].forEach(validateMember); });
         }
     }
     function validateFunction(functionDeclaration) {
