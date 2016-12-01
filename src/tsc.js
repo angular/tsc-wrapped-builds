@@ -40,6 +40,25 @@ function check(diags) {
     }
 }
 exports.check = check;
+function validateAngularCompilerOptions(options) {
+    if (options.annotationsAs) {
+        switch (options.annotationsAs) {
+            case 'decorators':
+            case 'static fields':
+                break;
+            default:
+                return [{
+                        file: null,
+                        start: null,
+                        length: null,
+                        messageText: 'Angular compiler options "annotationsAs" only supports "static fields" and "decorators"',
+                        category: ts.DiagnosticCategory.Error,
+                        code: 0
+                    }];
+        }
+    }
+}
+exports.validateAngularCompilerOptions = validateAngularCompilerOptions;
 var Tsc = (function () {
     function Tsc(readFile, readDirectory) {
         if (readFile === void 0) { readFile = ts.sys.readFile; }
@@ -80,6 +99,7 @@ var Tsc = (function () {
             var key = _b[_i];
             this.ngOptions[key] = this.parsed.options[key];
         }
+        check(validateAngularCompilerOptions(this.ngOptions));
         return { parsed: this.parsed, ngOptions: this.ngOptions };
     };
     Tsc.prototype.typeCheck = function (compilerHost, program) {
@@ -93,14 +113,11 @@ var Tsc = (function () {
         }
         check(diagnostics);
     };
-    Tsc.prototype.emit = function (compilerHost, oldProgram) {
-        // Create a new program since the host may be different from the old program.
-        var program = ts.createProgram(this.parsed.fileNames, this.parsed.options, compilerHost);
+    Tsc.prototype.emit = function (program) {
         debug('Emitting outputs...');
         var emitResult = program.emit();
         var diagnostics = [];
         diagnostics.push.apply(diagnostics, emitResult.diagnostics);
-        check(compilerHost.diagnostics);
         return emitResult.emitSkipped ? 1 : 0;
     };
     return Tsc;
