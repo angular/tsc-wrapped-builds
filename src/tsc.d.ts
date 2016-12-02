@@ -13,6 +13,9 @@ export interface CompilerInterface {
     typeCheck(compilerHost: ts.CompilerHost, program: ts.Program): void;
     emit(program: ts.Program): number;
 }
+export declare class UserError extends Error {
+    constructor(message: string);
+}
 export declare function formatDiagnostics(diags: ts.Diagnostic[]): string;
 export declare function check(diags: ts.Diagnostic[]): void;
 export declare function validateAngularCompilerOptions(options: AngularCompilerOptions): ts.Diagnostic[];

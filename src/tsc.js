@@ -6,9 +6,25 @@
  * found in the LICENSE file at https://angular.io/license
  */
 "use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fs_1 = require('fs');
 var path = require('path');
 var ts = require('typescript');
+var UserError = (function (_super) {
+    __extends(UserError, _super);
+    function UserError(message) {
+        _super.call(this, message);
+        this.message = message;
+        this.name = 'UserError';
+        this.stack = new Error().stack;
+    }
+    return UserError;
+}(Error));
+exports.UserError = UserError;
 var DEBUG = false;
 function debug(msg) {
     var o = [];
@@ -36,7 +52,7 @@ function formatDiagnostics(diags) {
 exports.formatDiagnostics = formatDiagnostics;
 function check(diags) {
     if (diags && diags.length && diags[0]) {
-        throw new Error(formatDiagnostics(diags));
+        throw new UserError(formatDiagnostics(diags));
     }
 }
 exports.check = check;

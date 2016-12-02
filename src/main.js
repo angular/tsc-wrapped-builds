@@ -12,6 +12,8 @@ var ts = require('typescript');
 var tsc_1 = require('./tsc');
 var compiler_host_1 = require('./compiler_host');
 var cli_options_1 = require('./cli_options');
+var tsc_2 = require('./tsc');
+exports.UserError = tsc_2.UserError;
 function main(project, cliOptions, codegen) {
     try {
         var projectDir = project;
