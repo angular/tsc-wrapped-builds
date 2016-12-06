@@ -17,11 +17,29 @@ var ts = require('typescript');
 var UserError = (function (_super) {
     __extends(UserError, _super);
     function UserError(message) {
-        _super.call(this, message);
-        this.message = message;
-        this.name = 'UserError';
-        this.stack = new Error().stack;
+        // Errors don't use current this, instead they create a new instance.
+        // We have to do forward all of our api to the nativeInstance.
+        var nativeError = _super.call(this, message);
+        this._nativeError = nativeError;
     }
+    Object.defineProperty(UserError.prototype, "message", {
+        get: function () { return this._nativeError.message; },
+        set: function (message) { this._nativeError.message = message; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(UserError.prototype, "name", {
+        get: function () { return 'UserError'; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(UserError.prototype, "stack", {
+        get: function () { return this._nativeError.stack; },
+        set: function (value) { this._nativeError.stack = value; },
+        enumerable: true,
+        configurable: true
+    });
+    UserError.prototype.toString = function () { return this._nativeError.toString(); };
     return UserError;
 }(Error));
 exports.UserError = UserError;

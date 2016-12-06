@@ -14,7 +14,12 @@ export interface CompilerInterface {
     emit(program: ts.Program): number;
 }
 export declare class UserError extends Error {
+    private _nativeError;
     constructor(message: string);
+    message: string;
+    readonly name: string;
+    stack: any;
+    toString(): string;
 }
 export declare function formatDiagnostics(diags: ts.Diagnostic[]): string;
 export declare function check(diags: ts.Diagnostic[]): void;
