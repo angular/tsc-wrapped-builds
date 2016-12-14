@@ -112,7 +112,7 @@ var TsickleCompilerHost = (function (_super) {
     return TsickleCompilerHost;
 }(DelegatingHost));
 exports.TsickleCompilerHost = TsickleCompilerHost;
-var IGNORED_FILES = /\.ngfactory\.js$|\.css\.js$|\.css\.shim\.js$/;
+var IGNORED_FILES = /\.ngfactory\.js$|\.ngstyle\.js$/;
 var MetadataWriterHost = (function (_super) {
     __extends(MetadataWriterHost, _super);
     function MetadataWriterHost(delegate, ngOptions) {
