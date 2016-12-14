@@ -8,10 +8,21 @@
 import * as ts from 'typescript';
 import { ModuleMetadata } from './schema';
 /**
+ * A set of collector options to use when collecting metadata.
+ */
+export declare class CollectorOptions {
+    /**
+     * Collect a hidden field "$quoted$" in objects literals that record when the key was quoted in
+     * the source.
+     */
+    quotedNames?: boolean;
+}
+/**
  * Collect decorator metadata from a TypeScript module.
  */
 export declare class MetadataCollector {
-    constructor();
+    private options;
+    constructor(options?: CollectorOptions);
     /**
      * Returns a JSON.stringify friendly form describing the decorators of the exported classes from
      * the source file that is expected to correspond to a module.

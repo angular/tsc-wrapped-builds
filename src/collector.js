@@ -11,10 +11,21 @@ var evaluator_1 = require('./evaluator');
 var schema_1 = require('./schema');
 var symbols_1 = require('./symbols');
 /**
+ * A set of collector options to use when collecting metadata.
+ */
+var CollectorOptions = (function () {
+    function CollectorOptions() {
+    }
+    return CollectorOptions;
+}());
+exports.CollectorOptions = CollectorOptions;
+/**
  * Collect decorator metadata from a TypeScript module.
  */
 var MetadataCollector = (function () {
-    function MetadataCollector() {
+    function MetadataCollector(options) {
+        if (options === void 0) { options = {}; }
+        this.options = options;
     }
     /**
      * Returns a JSON.stringify friendly form describing the decorators of the exported classes from
@@ -24,7 +35,7 @@ var MetadataCollector = (function () {
         if (strict === void 0) { strict = false; }
         var locals = new symbols_1.Symbols(sourceFile);
         var nodeMap = new Map();
-        var evaluator = new evaluator_1.Evaluator(locals, nodeMap);
+        var evaluator = new evaluator_1.Evaluator(locals, nodeMap, this.options);
         var metadata;
         var exports;
         function objFromDecorator(decoratorNode) {
