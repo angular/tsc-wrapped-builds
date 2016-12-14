@@ -42,6 +42,7 @@ export declare class TsickleCompilerHost extends DelegatingHost {
 export declare class MetadataWriterHost extends DelegatingHost {
     private ngOptions;
     private metadataCollector;
+    private metadataCollector1;
     constructor(delegate: ts.CompilerHost, ngOptions: NgOptions);
     private writeMetadata(emitFilePath, sourceFile);
     writeFile: ts.WriteFileCallback;

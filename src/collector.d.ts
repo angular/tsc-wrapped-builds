@@ -12,6 +12,10 @@ import { ModuleMetadata } from './schema';
  */
 export declare class CollectorOptions {
     /**
+     * Version of the metadata to collect.
+     */
+    version?: number;
+    /**
      * Collect a hidden field "$quoted$" in objects literals that record when the key was quoted in
      * the source.
      */

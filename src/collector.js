@@ -418,7 +418,10 @@ var MetadataCollector = (function () {
             else if (strict) {
                 validateMetadata(sourceFile, nodeMap, metadata);
             }
-            var result = { __symbolic: 'module', version: schema_1.VERSION, metadata: metadata };
+            var result = {
+                __symbolic: 'module',
+                version: this.options.version || schema_1.VERSION, metadata: metadata
+            };
             if (exports)
                 result.exports = exports;
             return result;
