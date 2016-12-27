@@ -38,4 +38,4 @@ export declare class Tsc implements CompilerInterface {
     typeCheck(compilerHost: ts.CompilerHost, program: ts.Program): void;
     emit(program: ts.Program): number;
 }
-export declare var tsc: CompilerInterface;
+export declare const tsc: CompilerInterface;
