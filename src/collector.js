@@ -10,6 +10,18 @@ var ts = require('typescript');
 var evaluator_1 = require('./evaluator');
 var schema_1 = require('./schema');
 var symbols_1 = require('./symbols');
+// In TypeScript 2.1 these flags moved
+// These helpers work for both 2.0 and 2.1.
+var isExport = ts.ModifierFlags ?
+    (function (node) {
+        return !!(ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Export);
+    }) :
+    (function (node) { return !!((node.flags & ts.NodeFlags.Export)); });
+var isStatic = ts.ModifierFlags ?
+    (function (node) {
+        return !!(ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Static);
+    }) :
+    (function (node) { return !!((node.flags & ts.NodeFlags.Static)); });
 /**
  * A set of collector options to use when collecting metadata.
  */
@@ -126,7 +138,7 @@ var MetadataCollector = (function () {
                     case ts.SyntaxKind.MethodDeclaration:
                         isConstructor = member.kind === ts.SyntaxKind.Constructor;
                         var method = member;
-                        if (method.flags & ts.NodeFlags.Static) {
+                        if (isStatic(method)) {
                             var maybeFunc = maybeGetSimpleFunction(method);
                             if (maybeFunc) {
                                 recordStaticMember(maybeFunc.name, maybeFunc.func);
@@ -173,7 +185,7 @@ var MetadataCollector = (function () {
                     case ts.SyntaxKind.GetAccessor:
                     case ts.SyntaxKind.SetAccessor:
                         var property = member;
-                        if (property.flags & ts.NodeFlags.Static) {
+                        if (isStatic(property)) {
                             var name_2 = evaluator.nameOf(property.name);
                             if (!schema_1.isMetadataError(name_2)) {
                                 if (property.initializer) {
@@ -221,7 +233,7 @@ var MetadataCollector = (function () {
         });
         var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
         var isExported = function (node) {
-            return (node.flags & ts.NodeFlags.Export) || isExportedIdentifier(node.name);
+            return isExport(node) || isExportedIdentifier(node.name);
         };
         var exportedIdentifierName = function (identifier) {
             return exportMap.get(identifier.text) || identifier.text;
@@ -379,8 +391,7 @@ var MetadataCollector = (function () {
                                 varValue = recordEntry(errorSym('Variable not initialized', nameNode), nameNode);
                             }
                             var exported = false;
-                            if (variableStatement.flags & ts.NodeFlags.Export ||
-                                variableDeclaration.flags & ts.NodeFlags.Export ||
+                            if (isExport(variableStatement) || isExport(variableDeclaration) ||
                                 isExportedIdentifier(nameNode)) {
                                 if (!metadata)
                                     metadata = {};
@@ -409,9 +420,9 @@ var MetadataCollector = (function () {
                                 switch (nameNode.kind) {
                                     case ts.SyntaxKind.Identifier:
                                         var name_6 = nameNode;
-                                        var varValue = errorSym('Destructuring not supported', nameNode);
+                                        var varValue = errorSym('Destructuring not supported', name_6);
                                         locals.define(name_6.text, varValue);
-                                        if (node.flags & ts.NodeFlags.Export) {
+                                        if (isExport(node)) {
                                             if (!metadata)
                                                 metadata = {};
                                             metadata[name_6.text] = varValue;
@@ -605,7 +616,10 @@ function namesOf(parameters) {
             var bindingPattern = name;
             for (var _i = 0, _a = bindingPattern.elements; _i < _a.length; _i++) {
                 var element = _a[_i];
-                addNamesOf(element.name);
+                var name_7 = element.name;
+                if (name_7) {
+                    addNamesOf(name_7);
+                }
             }
         }
     }
