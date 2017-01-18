@@ -100,7 +100,7 @@ var Tsc = (function () {
         this.readFile = readFile;
         this.readDirectory = readDirectory;
     }
-    Tsc.prototype.readConfiguration = function (project, basePath) {
+    Tsc.prototype.readConfiguration = function (project, basePath, existingOptions) {
         this.basePath = basePath;
         // Allow a directory containing tsconfig.json as the project value
         // Note, TS@next returns an empty array, while earlier versions throw
@@ -123,7 +123,7 @@ var Tsc = (function () {
             fileExists: fs_1.existsSync,
             readDirectory: this.readDirectory
         };
-        this.parsed = ts.parseJsonConfigFileContent(config, host, basePath);
+        this.parsed = ts.parseJsonConfigFileContent(config, host, basePath, existingOptions);
         check(this.parsed.errors);
         // Default codegen goes to the current directory
         // Parsed options are already converted to absolute paths

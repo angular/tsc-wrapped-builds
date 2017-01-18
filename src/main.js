@@ -14,7 +14,7 @@ var compiler_host_1 = require('./compiler_host');
 var cli_options_1 = require('./cli_options');
 var tsc_2 = require('./tsc');
 exports.UserError = tsc_2.UserError;
-function main(project, cliOptions, codegen) {
+function main(project, cliOptions, codegen, options) {
     try {
         var projectDir = project;
         if (fs.lstatSync(project).isFile()) {
@@ -23,7 +23,7 @@ function main(project, cliOptions, codegen) {
         // file names in tsconfig are resolved relative to this absolute path
         var basePath = path.resolve(process.cwd(), cliOptions.basePath || projectDir);
         // read the configuration options from wherever you store them
-        var _a = tsc_1.tsc.readConfiguration(project, basePath), parsed_1 = _a.parsed, ngOptions_1 = _a.ngOptions;
+        var _a = tsc_1.tsc.readConfiguration(project, basePath, options), parsed_1 = _a.parsed, ngOptions_1 = _a.ngOptions;
         ngOptions_1.basePath = basePath;
         var createProgram_1 = function (host, oldProgram) {
             return ts.createProgram(parsed_1.fileNames, parsed_1.options, host, oldProgram);
@@ -97,10 +97,15 @@ function main(project, cliOptions, codegen) {
 exports.main = main;
 // CLI entry point
 if (require.main === module) {
-    var args_1 = require('minimist')(process.argv.slice(2));
-    var project = args_1.p || args_1.project || '.';
-    var cliOptions = new cli_options_1.CliOptions(args_1);
-    main(project, cliOptions).then(function (exitCode) { return process.exit(exitCode); }).catch(function (e) {
+    var args_1 = process.argv.slice(2);
+    var _a = ts.parseCommandLine(args_1), options = _a.options, fileNames = _a.fileNames, errors = _a.errors;
+    tsc_1.check(errors);
+    var project = options.project || '.';
+    // TODO(alexeagle): command line should be TSC-compatible, remove "CliOptions" here
+    var cliOptions = new cli_options_1.CliOptions(require('minimist')(args_1));
+    main(project, cliOptions, null, options)
+        .then(function (exitCode) { return process.exit(exitCode); })
+        .catch(function (e) {
         console.error(e.stack);
         console.error('Compilation failed');
         process.exit(1);

@@ -19,7 +19,8 @@ describe('tsc-wrapped', function () {
             fs.writeFileSync(path.join(basePath, fileName), content, { encoding: 'utf-8' });
         };
         write('decorators.ts', '/** @Annotation */ export var Component: Function;');
-        write('dep.ts', "\n      export const A = 1;\n      export const B = 2;\n    ");
+        fs.mkdirSync(path.join(basePath, 'dep'));
+        write('dep/index.ts', "\n      export const A = 1;\n      export const B = 2;\n    ");
         write('test.ts', "\n      import {Component} from './decorators';\n      export * from './dep';\n\n      @Component({})\n      export class Comp {\n        /**\n         * Comment that is\n         * multiple lines\n         */\n        method(x: string): void {}\n      }\n    ");
     });
     function readOut(ext) {
@@ -31,14 +32,14 @@ describe('tsc-wrapped', function () {
             .catch(function (e) { return expect(e.message).toContain('ENOENT'); });
     });
     it('should pre-process sources', function (done) {
-        write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": true,\n        \"module\": \"es2015\"\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
+        write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": true,\n        \"moduleResolution\": \"node\",\n        \"target\": \"es2015\"\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
         main_1.main(basePath, { basePath: basePath })
             .then(function () {
             var out = readOut('js');
             // No helpers since decorators were lowered
             expect(out).not.toContain('__decorate');
-            // Expand `export *`
-            expect(out).toContain('export { A, B }');
+            // Expand `export *` and fix index import
+            expect(out).toContain("export { A, B } from './dep/index'");
             // Annotated for Closure compiler
             expect(out).toContain('* @param {?} x');
             // Comments should stay multi-line
@@ -54,7 +55,7 @@ describe('tsc-wrapped', function () {
             .catch(function (e) { return done.fail(e); });
     });
     it('should allow all options disabled', function (done) {
-        write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": false,\n        \"module\": \"es2015\"\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": false,\n        \"annotationsAs\": \"decorators\",\n        \"skipMetadataEmit\": true,\n        \"skipTemplateCodegen\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
+        write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": false,\n        \"module\": \"es2015\",\n        \"moduleResolution\": \"node\"\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": false,\n        \"annotationsAs\": \"decorators\",\n        \"skipMetadataEmit\": true,\n        \"skipTemplateCodegen\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
         main_1.main(basePath, { basePath: basePath })
             .then(function () {
             var out = readOut('js');

@@ -6,7 +6,7 @@ import AngularCompilerOptions from './options';
  * you should implement a similar interface.
  */
 export interface CompilerInterface {
-    readConfiguration(project: string, basePath: string): {
+    readConfiguration(project: string, basePath: string, existingOptions?: ts.CompilerOptions): {
         parsed: ts.ParsedCommandLine;
         ngOptions: AngularCompilerOptions;
     };
@@ -31,7 +31,7 @@ export declare class Tsc implements CompilerInterface {
     parsed: ts.ParsedCommandLine;
     private basePath;
     constructor(readFile?: (path: string, encoding?: string) => string, readDirectory?: (path: string, extensions?: string[], exclude?: string[], include?: string[]) => string[]);
-    readConfiguration(project: string, basePath: string): {
+    readConfiguration(project: string, basePath: string, existingOptions?: ts.CompilerOptions): {
         parsed: ts.ParsedCommandLine;
         ngOptions: AngularCompilerOptions;
     };

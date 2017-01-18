@@ -104,7 +104,8 @@ var TsickleCompilerHost = (function (_super) {
             // this means we don't process e.g. lib.d.ts.
             if (isDefinitions)
                 return sourceFile;
-            var _a = tsickle.annotate(_this.oldProgram, sourceFile, { untyped: true }), output = _a.output, externs = _a.externs, diagnostics = _a.diagnostics;
+            var es2015Target = _this.options.target == ts.ScriptTarget.ES2015; // This covers ES6 too
+            var _a = tsickle.annotate(_this.oldProgram, sourceFile, { untyped: true, convertIndexImportShorthand: es2015Target }, _this.delegate, _this.options), output = _a.output, externs = _a.externs, diagnostics = _a.diagnostics;
             _this.diagnostics = diagnostics;
             return ts.createSourceFile(fileName, output, languageVersion, true);
         };
