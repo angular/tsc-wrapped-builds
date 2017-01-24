@@ -54,6 +54,33 @@ describe('tsc-wrapped', function () {
         })
             .catch(function (e) { return done.fail(e); });
     });
+    it('should pre-process sources using config from vinyl like object', function (done) {
+        var config = {
+            path: basePath + '/tsconfig.json',
+            contents: new Buffer(JSON.stringify({
+                compilerOptions: {
+                    experimentalDecorators: true,
+                    types: [],
+                    outDir: 'built',
+                    declaration: true,
+                    moduleResolution: 'node',
+                    target: 'es2015'
+                },
+                angularCompilerOptions: { annotateForClosureCompiler: true },
+                files: ['test.ts']
+            }))
+        };
+        main_1.main(config, { basePath: basePath })
+            .then(function () {
+            var out = readOut('js');
+            // Expand `export *` and fix index import
+            expect(out).toContain("export { A, B } from './dep/index'");
+            // Annotated for Closure compiler
+            expect(out).toContain('* @param {?} x');
+            done();
+        })
+            .catch(function (e) { return done.fail(e); });
+    });
     it('should allow all options disabled', function (done) {
         write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": false,\n        \"module\": \"es2015\",\n        \"moduleResolution\": \"node\"\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": false,\n        \"annotationsAs\": \"decorators\",\n        \"skipMetadataEmit\": true,\n        \"skipTemplateCodegen\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
         main_1.main(basePath, { basePath: basePath })
