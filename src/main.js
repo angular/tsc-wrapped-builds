@@ -12,12 +12,17 @@ var ts = require('typescript');
 var tsc_1 = require('./tsc');
 var compiler_host_1 = require('./compiler_host');
 var cli_options_1 = require('./cli_options');
+var vinyl_file_1 = require('./vinyl_file');
 var tsc_2 = require('./tsc');
 exports.UserError = tsc_2.UserError;
 function main(project, cliOptions, codegen, options) {
     try {
         var projectDir = project;
-        if (fs.lstatSync(project).isFile()) {
+        // project is vinyl like file object
+        if (vinyl_file_1.isVinylFile(project)) {
+            projectDir = path.dirname(project.path);
+        }
+        else if (fs.lstatSync(project).isFile()) {
             projectDir = path.dirname(project);
         }
         // file names in tsconfig are resolved relative to this absolute path
