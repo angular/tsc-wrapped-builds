@@ -8,6 +8,7 @@
 "use strict";
 var ts = require('typescript');
 var collector_1 = require('../src/collector');
+var schema_1 = require('../src/schema');
 var typescript_mocks_1 = require('./typescript.mocks');
 describe('Collector', function () {
     var documentRegistry = ts.createDocumentRegistry();
@@ -23,6 +24,7 @@ describe('Collector', function () {
             '/promise.ts',
             '/unsupported-1.ts',
             '/unsupported-2.ts',
+            'class-arity.ts',
             'import-star.ts',
             'exported-classes.ts',
             'exported-functions.ts',
@@ -601,6 +603,29 @@ describe('Collector', function () {
                 }
             });
         });
+        function expectClass(entry) {
+            var result = schema_1.isClassMetadata(entry);
+            expect(result).toBeTruthy();
+            return result;
+        }
+        it('should collect the correct arity for a class', function () {
+            var metadata = collector.getMetadata(program.getSourceFile('/class-arity.ts'));
+            var zero = metadata.metadata['Zero'];
+            if (expectClass(zero))
+                expect(zero.arity).toBeUndefined();
+            var one = metadata.metadata['One'];
+            if (expectClass(one))
+                expect(one.arity).toBe(1);
+            var two = metadata.metadata['Two'];
+            if (expectClass(two))
+                expect(two.arity).toBe(2);
+            var three = metadata.metadata['Three'];
+            if (expectClass(three))
+                expect(three.arity).toBe(3);
+            var nine = metadata.metadata['Nine'];
+            if (expectClass(nine))
+                expect(nine.arity).toBe(9);
+        });
     });
     function override(fileName, content) {
         host.overrideFile(fileName, content);
@@ -629,6 +654,7 @@ var FILES = {
         'error-cases.ts': "\n      import HeroService from './hero.service';\n\n      export class CaseCtor {\n        constructor(private _heroService: HeroService) { }\n      }\n    "
     },
     'promise.ts': "\n    interface PromiseLike<T> {\n        then<TResult>(onfulfilled?: (value: T) => TResult | PromiseLike<TResult>, onrejected?: (reason: any) => TResult | PromiseLike<TResult>): PromiseLike<TResult>;\n        then<TResult>(onfulfilled?: (value: T) => TResult | PromiseLike<TResult>, onrejected?: (reason: any) => void): PromiseLike<TResult>;\n    }\n\n    interface Promise<T> {\n        then<TResult>(onfulfilled?: (value: T) => TResult | PromiseLike<TResult>, onrejected?: (reason: any) => TResult | PromiseLike<TResult>): Promise<TResult>;\n        then<TResult>(onfulfilled?: (value: T) => TResult | PromiseLike<TResult>, onrejected?: (reason: any) => void): Promise<TResult>;\n        catch(onrejected?: (reason: any) => T | PromiseLike<T>): Promise<T>;\n        catch(onrejected?: (reason: any) => void): Promise<T>;\n    }\n\n    interface PromiseConstructor {\n        prototype: Promise<any>;\n        new <T>(executor: (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;\n        reject(reason: any): Promise<void>;\n        reject<T>(reason: any): Promise<T>;\n        resolve<T>(value: T | PromiseLike<T>): Promise<T>;\n        resolve(): Promise<void>;\n    }\n\n    declare var Promise: PromiseConstructor;\n  ",
+    'class-arity.ts': "\n    export class Zero {}\n    export class One<T> {}\n    export class Two<T, V> {}\n    export class Three<T1, T2, T3> {}\n    export class Nine<T1, T2, T3, T4, T5, T6, T7, T8, T9> {}\n  ",
     'unsupported-1.ts': "\n    export let {a, b} = {a: 1, b: 2};\n    export let [c, d] = [1, 2];\n    export let e;\n  ",
     'unsupported-2.ts': "\n    import {Injectable} from 'angular2/core';\n\n    class Foo {}\n\n    @Injectable()\n    export class Bar {\n      constructor(private f: Foo) {}\n    }\n  ",
     'import-star.ts': "\n    import {Injectable} from 'angular2/core';\n    import * as common from 'angular2/common';\n\n    @Injectable()\n    export class SomeClass {\n      constructor(private f: common.NgFor) {}\n    }\n  ",
