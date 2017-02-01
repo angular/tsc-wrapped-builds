@@ -110,6 +110,11 @@ var MetadataCollector = (function () {
                     }
                 });
             }
+            // Add arity if the type is generic
+            var typeParameters = classDeclaration.typeParameters;
+            if (typeParameters && typeParameters.length) {
+                result.arity = typeParameters.length;
+            }
             // Add class decorators
             if (classDeclaration.decorators) {
                 result.decorators = getDecorators(classDeclaration.decorators);
