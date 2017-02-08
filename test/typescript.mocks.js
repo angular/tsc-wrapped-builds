@@ -4,8 +4,8 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var fs = require('fs');
-var ts = require('typescript');
+var fs = require("fs");
+var ts = require("typescript");
 var Host = (function () {
     function Host(directory, scripts) {
         this.directory = directory;
@@ -95,9 +95,11 @@ var MockIdentifier = (function (_super) {
         if (flags === void 0) { flags = 0; }
         if (pos === void 0) { pos = 0; }
         if (end === void 0) { end = 0; }
-        _super.call(this, kind, flags, pos, end);
-        this.name = name;
-        this.text = name;
+        var _this = _super.call(this, kind, flags, pos, end) || this;
+        _this.name = name;
+        _this.kind = kind;
+        _this.text = name;
+        return _this;
     }
     return MockIdentifier;
 }(MockNode));
@@ -109,8 +111,10 @@ var MockVariableDeclaration = (function (_super) {
         if (flags === void 0) { flags = 0; }
         if (pos === void 0) { pos = 0; }
         if (end === void 0) { end = 0; }
-        _super.call(this, kind, flags, pos, end);
-        this.name = name;
+        var _this = _super.call(this, kind, flags, pos, end) || this;
+        _this.name = name;
+        _this.kind = kind;
+        return _this;
     }
     MockVariableDeclaration.of = function (name) {
         return new MockVariableDeclaration(new MockIdentifier(name));
@@ -130,6 +134,8 @@ var MockSymbol = (function () {
     MockSymbol.prototype.getName = function () { return this.name; };
     MockSymbol.prototype.getDeclarations = function () { return [this.node]; };
     MockSymbol.prototype.getDocumentationComment = function () { return []; };
+    MockSymbol.prototype.getJsDocTags = function () { return []; };
+    ;
     MockSymbol.of = function (name) { return new MockSymbol(name); };
     return MockSymbol;
 }());

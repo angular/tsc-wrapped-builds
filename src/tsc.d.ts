@@ -18,7 +18,7 @@ export declare class UserError extends Error {
     private _nativeError;
     constructor(message: string);
     message: string;
-    readonly name: string;
+    name: string;
     stack: any;
     toString(): string;
 }

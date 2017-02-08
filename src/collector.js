@@ -6,10 +6,10 @@
  * found in the LICENSE file at https://angular.io/license
  */
 "use strict";
-var ts = require('typescript');
-var evaluator_1 = require('./evaluator');
-var schema_1 = require('./schema');
-var symbols_1 = require('./symbols');
+var ts = require("typescript");
+var evaluator_1 = require("./evaluator");
+var schema_1 = require("./schema");
+var symbols_1 = require("./symbols");
 // In TypeScript 2.1 these flags moved
 // These helpers work for both 2.0 and 2.1.
 var isExport = ts.ModifierFlags ?
@@ -385,7 +385,7 @@ var MetadataCollector = (function () {
                     break;
                 case ts.SyntaxKind.VariableStatement:
                     var variableStatement = node;
-                    var _loop_1 = function(variableDeclaration) {
+                    var _loop_1 = function (variableDeclaration) {
                         if (variableDeclaration.name.kind == ts.SyntaxKind.Identifier) {
                             var nameNode = variableDeclaration.name;
                             var varValue = void 0;

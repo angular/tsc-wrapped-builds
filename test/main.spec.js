@@ -6,10 +6,10 @@
  * found in the LICENSE file at https://angular.io/license
  */
 "use strict";
-var fs = require('fs');
-var path = require('path');
-var main_1 = require('../src/main');
-var test_support_1 = require('./test_support');
+var fs = require("fs");
+var path = require("path");
+var main_1 = require("../src/main");
+var test_support_1 = require("./test_support");
 describe('tsc-wrapped', function () {
     var basePath;
     var write;

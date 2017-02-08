@@ -6,8 +6,8 @@
  * found in the LICENSE file at https://angular.io/license
  */
 "use strict";
-var ts = require('typescript');
-var schema_1 = require('./schema');
+var ts = require("typescript");
+var schema_1 = require("./schema");
 // In TypeScript 2.1 the spread element kind was renamed.
 var spreadElementSyntaxKind = ts.SyntaxKind.SpreadElement || ts.SyntaxKind.SpreadElementExpression;
 function isMethodCallOf(callExpression, memberName) {
