@@ -12,7 +12,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var fs_1 = require('fs');
-var tsickle = require('tsickle');
 var ts = require('typescript');
 var collector_1 = require('./collector');
 function formatDiagnostics(d) {
@@ -56,63 +55,6 @@ var DelegatingHost = (function () {
     return DelegatingHost;
 }());
 exports.DelegatingHost = DelegatingHost;
-var DecoratorDownlevelCompilerHost = (function (_super) {
-    __extends(DecoratorDownlevelCompilerHost, _super);
-    function DecoratorDownlevelCompilerHost(delegate, program) {
-        var _this = this;
-        _super.call(this, delegate);
-        this.program = program;
-        this.ANNOTATION_SUPPORT = "\ninterface DecoratorInvocation {\n  type: Function;\n  args?: any[];\n}\n";
-        /** Error messages produced by tsickle, if any. */
-        this.diagnostics = [];
-        this.getSourceFile = function (fileName, languageVersion, onError) {
-            var originalContent = _this.delegate.readFile(fileName);
-            var newContent = originalContent;
-            if (!/\.d\.ts$/.test(fileName)) {
-                try {
-                    var converted = tsickle.convertDecorators(_this.program.getTypeChecker(), _this.program.getSourceFile(fileName));
-                    if (converted.diagnostics) {
-                        (_a = _this.diagnostics).push.apply(_a, converted.diagnostics);
-                    }
-                    newContent = converted.output + _this.ANNOTATION_SUPPORT;
-                }
-                catch (e) {
-                    console.error('Cannot convertDecorators on file', fileName);
-                    throw e;
-                }
-            }
-            return ts.createSourceFile(fileName, newContent, languageVersion, true);
-            var _a;
-        };
-    }
-    return DecoratorDownlevelCompilerHost;
-}(DelegatingHost));
-exports.DecoratorDownlevelCompilerHost = DecoratorDownlevelCompilerHost;
-var TsickleCompilerHost = (function (_super) {
-    __extends(TsickleCompilerHost, _super);
-    function TsickleCompilerHost(delegate, oldProgram, options) {
-        var _this = this;
-        _super.call(this, delegate);
-        this.oldProgram = oldProgram;
-        this.options = options;
-        /** Error messages produced by tsickle, if any. */
-        this.diagnostics = [];
-        this.getSourceFile = function (fileName, languageVersion, onError) {
-            var sourceFile = _this.oldProgram.getSourceFile(fileName);
-            var isDefinitions = /\.d\.ts$/.test(fileName);
-            // Don't tsickle-process any d.ts that isn't a compilation target;
-            // this means we don't process e.g. lib.d.ts.
-            if (isDefinitions)
-                return sourceFile;
-            var es2015Target = _this.options.target == ts.ScriptTarget.ES2015; // This covers ES6 too
-            var _a = tsickle.annotate(_this.oldProgram, sourceFile, { untyped: true, convertIndexImportShorthand: es2015Target }, _this.delegate, _this.options), output = _a.output, externs = _a.externs, diagnostics = _a.diagnostics;
-            _this.diagnostics = diagnostics;
-            return ts.createSourceFile(fileName, output, languageVersion, true);
-        };
-    }
-    return TsickleCompilerHost;
-}(DelegatingHost));
-exports.TsickleCompilerHost = TsickleCompilerHost;
 var IGNORED_FILES = /\.ngfactory\.js$|\.ngstyle\.js$/;
 var MetadataWriterHost = (function (_super) {
     __extends(MetadataWriterHost, _super);
