@@ -10,7 +10,6 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 var compiler_host_1 = require('./src/compiler_host');
-exports.DecoratorDownlevelCompilerHost = compiler_host_1.DecoratorDownlevelCompilerHost;
 exports.MetadataWriterHost = compiler_host_1.MetadataWriterHost;
 var main_1 = require('./src/main');
 exports.UserError = main_1.UserError;

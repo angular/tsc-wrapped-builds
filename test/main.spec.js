@@ -126,5 +126,15 @@ describe('tsc-wrapped', function () {
         })
             .catch(function (e) { return done.fail(e); });
     });
+    it('should produce valid source maps', function (done) {
+        write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": true,\n        \"moduleResolution\": \"node\",\n        \"target\": \"es2015\",\n        \"sourceMap\": true\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
+        main_1.main(basePath, { basePath: basePath })
+            .then(function () {
+            var out = readOut('js.map');
+            expect(out).toContain('"sources":["../test.ts"]');
+            done();
+        })
+            .catch(function (e) { return done.fail(e); });
+    });
 });
 //# sourceMappingURL=main.spec.js.map
