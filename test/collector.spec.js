@@ -6,10 +6,10 @@
  * found in the LICENSE file at https://angular.io/license
  */
 "use strict";
-var ts = require('typescript');
-var collector_1 = require('../src/collector');
-var schema_1 = require('../src/schema');
-var typescript_mocks_1 = require('./typescript.mocks');
+var ts = require("typescript");
+var collector_1 = require("../src/collector");
+var schema_1 = require("../src/schema");
+var typescript_mocks_1 = require("./typescript.mocks");
 describe('Collector', function () {
     var documentRegistry = ts.createDocumentRegistry();
     var host;

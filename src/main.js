@@ -6,15 +6,15 @@
  * found in the LICENSE file at https://angular.io/license
  */
 "use strict";
-var fs = require('fs');
-var path = require('path');
-var tsickle = require('tsickle');
-var ts = require('typescript');
-var tsc_1 = require('./tsc');
-var compiler_host_1 = require('./compiler_host');
-var cli_options_1 = require('./cli_options');
-var vinyl_file_1 = require('./vinyl_file');
-var tsc_2 = require('./tsc');
+var fs = require("fs");
+var path = require("path");
+var tsickle = require("tsickle");
+var ts = require("typescript");
+var tsc_1 = require("./tsc");
+var compiler_host_1 = require("./compiler_host");
+var cli_options_1 = require("./cli_options");
+var vinyl_file_1 = require("./vinyl_file");
+var tsc_2 = require("./tsc");
 exports.UserError = tsc_2.UserError;
 function main(project, cliOptions, codegen, options) {
     try {
@@ -68,7 +68,7 @@ function main(project, cliOptions, codegen, options) {
                 convertIndexImportShorthand: ngOptions_1.target === ts.ScriptTarget.ES2015,
             };
             var tsickleHost = {
-                shouldSkipTsickleProcessing: function (fileName) { return false; },
+                shouldSkipTsickleProcessing: function (fileName) { return /\.d\.ts$/.test(fileName); },
                 pathToModuleName: function (context, importPath) { return ''; },
                 shouldIgnoreWarningsForPath: function (filePath) { return false; },
                 fileNameToModuleId: function (fileName) { return fileName; },

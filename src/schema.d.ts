@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-export declare const VERSION: number;
+export declare const VERSION = 3;
 export declare type MetadataEntry = ClassMetadata | FunctionMetadata | MetadataValue;
 export interface ModuleMetadata {
     __symbolic: 'module';

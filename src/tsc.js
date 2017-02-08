@@ -11,32 +11,45 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var fs_1 = require('fs');
-var path = require('path');
-var ts = require('typescript');
-var vinyl_file_1 = require('./vinyl_file');
+var fs_1 = require("fs");
+var path = require("path");
+var ts = require("typescript");
+var vinyl_file_1 = require("./vinyl_file");
 var UserError = (function (_super) {
     __extends(UserError, _super);
     function UserError(message) {
-        // Errors don't use current this, instead they create a new instance.
-        // We have to do forward all of our api to the nativeInstance.
-        var nativeError = _super.call(this, message);
-        this._nativeError = nativeError;
+        var _this = _super.call(this, message) || this;
+        // Required for TS 2.1, see
+        // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+        Object.setPrototypeOf(_this, UserError.prototype);
+        var nativeError = new Error(message);
+        _this._nativeError = nativeError;
+        return _this;
     }
     Object.defineProperty(UserError.prototype, "message", {
         get: function () { return this._nativeError.message; },
-        set: function (message) { this._nativeError.message = message; },
+        set: function (message) {
+            if (this._nativeError)
+                this._nativeError.message = message;
+        },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(UserError.prototype, "name", {
-        get: function () { return 'UserError'; },
+        get: function () { return this._nativeError.name; },
+        set: function (name) {
+            if (this._nativeError)
+                this._nativeError.name = name;
+        },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(UserError.prototype, "stack", {
         get: function () { return this._nativeError.stack; },
-        set: function (value) { this._nativeError.stack = value; },
+        set: function (value) {
+            if (this._nativeError)
+                this._nativeError.stack = value;
+        },
         enumerable: true,
         configurable: true
     });
@@ -131,7 +144,8 @@ var Tsc = (function () {
         var host = {
             useCaseSensitiveFileNames: true,
             fileExists: fs_1.existsSync,
-            readDirectory: this.readDirectory
+            readDirectory: this.readDirectory,
+            readFile: ts.sys.readFile
         };
         this.parsed = ts.parseJsonConfigFileContent(config, host, basePath, existingOptions);
         check(this.parsed.errors);

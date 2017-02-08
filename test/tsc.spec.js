@@ -6,8 +6,8 @@
  * found in the LICENSE file at https://angular.io/license
  */
 "use strict";
-var ts = require('typescript');
-var tsc_1 = require('../src/tsc');
+var ts = require("typescript");
+var tsc_1 = require("../src/tsc");
 describe('options parsing', function () {
     var configData = "\n{\n    \"angularCompilerOptions\": {\n        \"googleClosureOutput\": true\n    },\n    \"compilerOptions\": {\n        \"module\": \"commonjs\",\n        \"outDir\": \"built\"\n    }\n}";
     var tsc = new tsc_1.Tsc(function () { return configData; }, function () { return ['tsconfig.json']; });
@@ -24,7 +24,7 @@ describe('options parsing', function () {
         });
     });
     it('should combine all options into ngOptions from vinyl like object', function () {
-        var _a = tsc_1.tsc.readConfiguration(config, 'basePath'), parsed = _a.parsed, ngOptions = _a.ngOptions;
+        var _a = tsc.readConfiguration(config, 'basePath'), parsed = _a.parsed, ngOptions = _a.ngOptions;
         expect(ngOptions).toEqual({
             genDir: 'basePath',
             googleClosureOutput: true,

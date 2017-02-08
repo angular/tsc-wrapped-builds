@@ -11,9 +11,9 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var fs_1 = require('fs');
-var ts = require('typescript');
-var collector_1 = require('./collector');
+var fs_1 = require("fs");
+var ts = require("typescript");
+var collector_1 = require("./collector");
 function formatDiagnostics(d) {
     var host = {
         getCurrentDirectory: function () { return ts.sys.getCurrentDirectory(); },
@@ -59,12 +59,11 @@ var IGNORED_FILES = /\.ngfactory\.js$|\.ngstyle\.js$/;
 var MetadataWriterHost = (function (_super) {
     __extends(MetadataWriterHost, _super);
     function MetadataWriterHost(delegate, ngOptions) {
-        var _this = this;
-        _super.call(this, delegate);
-        this.ngOptions = ngOptions;
-        this.metadataCollector = new collector_1.MetadataCollector({ quotedNames: true });
-        this.metadataCollector1 = new collector_1.MetadataCollector({ version: 1 });
-        this.writeFile = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
+        var _this = _super.call(this, delegate) || this;
+        _this.ngOptions = ngOptions;
+        _this.metadataCollector = new collector_1.MetadataCollector({ quotedNames: true });
+        _this.metadataCollector1 = new collector_1.MetadataCollector({ version: 1 });
+        _this.writeFile = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
             if (/\.d\.ts$/.test(fileName)) {
                 // Let the original file be written first; this takes care of creating parent directories
                 _this.delegate.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
@@ -85,6 +84,7 @@ var MetadataWriterHost = (function (_super) {
             }
             _this.writeMetadata(fileName, sourceFiles[0]);
         };
+        return _this;
     }
     MetadataWriterHost.prototype.writeMetadata = function (emitFilePath, sourceFile) {
         // TODO: replace with DTS filePath when https://github.com/Microsoft/TypeScript/pull/8412 is

@@ -41,6 +41,7 @@ export declare class MockNode implements ts.Node {
 }
 export declare class MockIdentifier extends MockNode implements ts.Identifier {
     name: string;
+    kind: ts.SyntaxKind.Identifier;
     text: string;
     _primaryExpressionBrand: any;
     _memberExpressionBrand: any;
@@ -48,12 +49,13 @@ export declare class MockIdentifier extends MockNode implements ts.Identifier {
     _incrementExpressionBrand: any;
     _unaryExpressionBrand: any;
     _expressionBrand: any;
-    constructor(name: string, kind?: ts.SyntaxKind, flags?: ts.NodeFlags, pos?: number, end?: number);
+    constructor(name: string, kind?: ts.SyntaxKind.Identifier, flags?: ts.NodeFlags, pos?: number, end?: number);
 }
 export declare class MockVariableDeclaration extends MockNode implements ts.VariableDeclaration {
     name: ts.Identifier;
+    kind: ts.SyntaxKind.VariableDeclaration;
     _declarationBrand: any;
-    constructor(name: ts.Identifier, kind?: ts.SyntaxKind, flags?: ts.NodeFlags, pos?: number, end?: number);
+    constructor(name: ts.Identifier, kind?: ts.SyntaxKind.VariableDeclaration, flags?: ts.NodeFlags, pos?: number, end?: number);
     static of(name: string): MockVariableDeclaration;
 }
 export declare class MockSymbol implements ts.Symbol {
@@ -65,6 +67,7 @@ export declare class MockSymbol implements ts.Symbol {
     getName(): string;
     getDeclarations(): ts.Declaration[];
     getDocumentationComment(): ts.SymbolDisplayPart[];
+    getJsDocTags(): ts.JSDocTagInfo[];
     static of(name: string): MockSymbol;
 }
 export declare function expectNoDiagnostics(diagnostics: ts.Diagnostic[]): void;
