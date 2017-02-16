@@ -14,7 +14,9 @@ exports.MetadataWriterHost = compiler_host_1.MetadataWriterHost;
 var main_1 = require("./src/main");
 exports.UserError = main_1.UserError;
 exports.main = main_1.main;
+__export(require("./src/bundler"));
 __export(require("./src/cli_options"));
 __export(require("./src/collector"));
+__export(require("./src/index_writer"));
 __export(require("./src/schema"));
 //# sourceMappingURL=index.js.map

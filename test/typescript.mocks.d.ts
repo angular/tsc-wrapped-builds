@@ -18,6 +18,7 @@ export declare class Host implements ts.LanguageServiceHost {
     addFile(fileName: string): void;
     private getFileContent(fileName);
 }
+export declare function open(directory: Directory, fileName: string): Directory | string | undefined;
 export declare class MockNode implements ts.Node {
     kind: ts.SyntaxKind;
     flags: ts.NodeFlags;

@@ -31,3 +31,15 @@ export declare class MetadataWriterHost extends DelegatingHost {
     private writeMetadata(emitFilePath, sourceFile);
     writeFile: ts.WriteFileCallback;
 }
+export declare class SyntheticIndexHost extends DelegatingHost {
+    private syntheticIndex;
+    constructor(delegate: ts.CompilerHost, syntheticIndex: {
+        name: string;
+        content: string;
+        metadata: string;
+    });
+    fileExists: (fileName: string) => boolean;
+    readFile: (fileName: string) => string;
+    getSourceFile: (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void) => ts.SourceFile;
+    writeFile: ts.WriteFileCallback;
+}
