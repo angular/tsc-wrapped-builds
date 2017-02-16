@@ -14,8 +14,11 @@ var tsc_1 = require("./tsc");
 var compiler_host_1 = require("./compiler_host");
 var cli_options_1 = require("./cli_options");
 var vinyl_file_1 = require("./vinyl_file");
+var bundler_1 = require("./bundler");
+var index_writer_1 = require("./index_writer");
 var tsc_2 = require("./tsc");
 exports.UserError = tsc_2.UserError;
+var DTS = /\.d\.ts$/;
 function main(project, cliOptions, codegen, options) {
     try {
         var projectDir = project;
@@ -42,6 +45,38 @@ function main(project, cliOptions, codegen, options) {
         // https://github.com/Microsoft/TypeScript/issues/9552
         // todo(misko): remove once facade symlinks are removed
         host_1.realpath = function (path) { return path; };
+        // If the comilation is a bundle index then produce the bundle index metadata and
+        // the synthetic bundle index.
+        if (ngOptions_1.bundleIndex && !ngOptions_1.skipMetadataEmit) {
+            var files = parsed_1.fileNames.filter(function (f) { return !DTS.test(f); });
+            if (files.length != 1 && (!ngOptions_1.libraryIndex || files.length < 1)) {
+                tsc_1.check([{
+                        file: null,
+                        start: null,
+                        length: null,
+                        messageText: 'Angular compiler option "bundleIndex" requires one and only one .ts file in the "files" field or "libraryIndex" to also be specified in order to select which module to use as the library index',
+                        category: ts.DiagnosticCategory.Error,
+                        code: 0
+                    }]);
+            }
+            var file = files[0];
+            var indexModule = file.replace(/\.ts$/, '');
+            var libraryIndexModule = ngOptions_1.libraryIndex ?
+                bundler_1.MetadataBundler.resolveModule(ngOptions_1.libraryIndex, indexModule) :
+                indexModule;
+            var bundler = new bundler_1.MetadataBundler(indexModule, ngOptions_1.importAs, new bundler_1.CompilerHostAdapter(host_1));
+            if (diagnostics_1)
+                console.time('NG bundle index');
+            var metadataBundle = bundler.getMetadataBundle();
+            if (diagnostics_1)
+                console.timeEnd('NG bundle index');
+            var metadata = JSON.stringify(metadataBundle.metadata);
+            var name_1 = path.join(path.dirname(libraryIndexModule), ngOptions_1.bundleIndex + '.ts');
+            var libraryIndex = ngOptions_1.libraryIndex || "./" + path.basename(indexModule);
+            var content = index_writer_1.privateEntriesToIndex(libraryIndex, metadataBundle.privates);
+            host_1 = new compiler_host_1.SyntheticIndexHost(host_1, { name: name_1, content: content, metadata: metadata });
+            parsed_1.fileNames.push(name_1);
+        }
         var program_1 = createProgram_1(host_1);
         var errors = program_1.getOptionsDiagnostics();
         tsc_1.check(errors);

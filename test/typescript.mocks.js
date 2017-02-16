@@ -41,25 +41,30 @@ var Host = (function () {
         if (this.overrides.has(fileName)) {
             return this.overrides.get(fileName);
         }
-        var names = fileName.split('/');
-        if (names[names.length - 1] === 'lib.d.ts') {
+        if (fileName.endsWith('lib.d.ts')) {
             return fs.readFileSync(ts.getDefaultLibFilePath(this.getCompilationSettings()), 'utf8');
         }
-        var current = this.directory;
-        if (names.length && names[0] === '')
-            names.shift();
-        for (var _i = 0, names_1 = names; _i < names_1.length; _i++) {
-            var name_1 = names_1[_i];
-            if (!current || typeof current === 'string')
-                return undefined;
-            current = current[name_1];
-        }
+        var current = open(this.directory, fileName);
         if (typeof current === 'string')
             return current;
     };
     return Host;
 }());
 exports.Host = Host;
+function open(directory, fileName) {
+    var names = fileName.split('/');
+    var current = directory;
+    if (names.length && names[0] === '')
+        names.shift();
+    for (var _i = 0, names_1 = names; _i < names_1.length; _i++) {
+        var name_1 = names_1[_i];
+        if (!current || typeof current === 'string')
+            return undefined;
+        current = current[name_1];
+    }
+    return current;
+}
+exports.open = open;
 var MockNode = (function () {
     function MockNode(kind, flags, pos, end) {
         if (kind === void 0) { kind = ts.SyntaxKind.Identifier; }

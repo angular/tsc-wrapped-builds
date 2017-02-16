@@ -56,6 +56,7 @@ var DelegatingHost = (function () {
 }());
 exports.DelegatingHost = DelegatingHost;
 var IGNORED_FILES = /\.ngfactory\.js$|\.ngstyle\.js$/;
+var DTS = /\.d\.ts$/;
 var MetadataWriterHost = (function (_super) {
     __extends(MetadataWriterHost, _super);
     function MetadataWriterHost(delegate, ngOptions) {
@@ -82,7 +83,9 @@ var MetadataWriterHost = (function (_super) {
             if (sourceFiles.length > 1) {
                 throw new Error('Bundled emit with --out is not supported');
             }
-            _this.writeMetadata(fileName, sourceFiles[0]);
+            if (!_this.ngOptions.skipMetadataEmit && !_this.ngOptions.bundleIndex) {
+                _this.writeMetadata(fileName, sourceFiles[0]);
+            }
         };
         return _this;
     }
@@ -111,4 +114,36 @@ var MetadataWriterHost = (function (_super) {
     return MetadataWriterHost;
 }(DelegatingHost));
 exports.MetadataWriterHost = MetadataWriterHost;
+var SyntheticIndexHost = (function (_super) {
+    __extends(SyntheticIndexHost, _super);
+    function SyntheticIndexHost(delegate, syntheticIndex) {
+        var _this = _super.call(this, delegate) || this;
+        _this.syntheticIndex = syntheticIndex;
+        _this.fileExists = function (fileName) {
+            return fileName == _this.syntheticIndex.name || _this.delegate.fileExists(fileName);
+        };
+        _this.readFile = function (fileName) {
+            return fileName == _this.syntheticIndex.name ? _this.syntheticIndex.content :
+                _this.delegate.readFile(fileName);
+        };
+        _this.getSourceFile = function (fileName, languageVersion, onError) {
+            if (fileName == _this.syntheticIndex.name) {
+                return ts.createSourceFile(fileName, _this.syntheticIndex.content, languageVersion, true);
+            }
+            return _this.delegate.getSourceFile(fileName, languageVersion, onError);
+        };
+        _this.writeFile = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
+            _this.delegate.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+            if (fileName.match(DTS) && sourceFiles && sourceFiles.length == 1 &&
+                sourceFiles[0].fileName == _this.syntheticIndex.name) {
+                // If we are writing the synthetic index, write the metadata along side.
+                var metadataName = fileName.replace(DTS, '.metadata.json');
+                fs_1.writeFileSync(metadataName, _this.syntheticIndex.metadata, 'utf8');
+            }
+        };
+        return _this;
+    }
+    return SyntheticIndexHost;
+}(DelegatingHost));
+exports.SyntheticIndexHost = SyntheticIndexHost;
 //# sourceMappingURL=compiler_host.js.map

@@ -11,6 +11,7 @@ export interface ModuleMetadata {
     __symbolic: 'module';
     version: number;
     exports?: ModuleExportMetadata[];
+    importAs?: string;
     metadata: {
         [name: string]: MetadataEntry;
     };
@@ -157,6 +158,10 @@ export interface MetadataError {
      * The number of utf8 code-units from the beginning of the file of the error.
      */
     character?: number;
+    /**
+     * The module of the error (only used in bundled metadata)
+     */
+    module?: string;
     /**
      * Context information that can be used to generate a more descriptive error message. The content
      * of the context is dependent on the error message.
