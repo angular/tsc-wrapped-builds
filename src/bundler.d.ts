@@ -23,6 +23,7 @@ export declare class MetadataBundler {
     private metadataCache;
     private exports;
     private rootModule;
+    private exported;
     constructor(root: string, importAs: string | undefined, host: MetadataBundlerHost);
     getMetadataBundle(): BundledModule;
     static resolveModule(importName: string, from: string): string;
@@ -34,6 +35,7 @@ export declare class MetadataBundler {
      * symbol for private symbols that are not exported by bundle index.
      */
     private canonicalizeSymbols(exportedSymbols);
+    private canonicalizeSymbol(symbol);
     private getEntries(exportedSymbols);
     private convertSymbol(symbol);
     private convertEntry(moduleName, value);

@@ -126,16 +126,18 @@ var MetadataBundler = (function () {
      */
     MetadataBundler.prototype.canonicalizeSymbols = function (exportedSymbols) {
         var symbols = Array.from(this.symbolMap.values());
-        var exported = new Set(exportedSymbols);
-        symbols.forEach(function (symbol) {
-            var rootExport = getRootExport(symbol);
-            var declaration = getSymbolDeclaration(symbol);
-            var isPrivate = !exported.has(rootExport);
-            var canonicalSymbol = isPrivate ? declaration : rootExport;
-            symbol.isPrivate = isPrivate;
-            symbol.declaration = declaration;
-            symbol.canonicalSymbol = canonicalSymbol;
-        });
+        this.exported = new Set(exportedSymbols);
+        ;
+        symbols.forEach(this.canonicalizeSymbol, this);
+    };
+    MetadataBundler.prototype.canonicalizeSymbol = function (symbol) {
+        var rootExport = getRootExport(symbol);
+        var declaration = getSymbolDeclaration(symbol);
+        var isPrivate = !this.exported.has(rootExport);
+        var canonicalSymbol = isPrivate ? declaration : rootExport;
+        symbol.isPrivate = isPrivate;
+        symbol.declaration = declaration;
+        symbol.canonicalSymbol = canonicalSymbol;
     };
     MetadataBundler.prototype.getEntries = function (exportedSymbols) {
         var _this = this;
@@ -395,14 +397,11 @@ var MetadataBundler = (function () {
         return symbol;
     };
     MetadataBundler.prototype.canonicalSymbolOf = function (module, name) {
+        // Ensure the module has been seen.
+        this.exportAll(module);
         var symbol = this.symbolOf(module, name);
         if (!symbol.canonicalSymbol) {
-            // If we get a symbol after canonical symbols have been assigned it must be a private
-            // symbol so treat it as one.
-            symbol.declaration = symbol;
-            symbol.canonicalSymbol = symbol;
-            symbol.isPrivate = true;
-            this.convertSymbol(symbol);
+            this.canonicalizeSymbol(symbol);
         }
         return symbol;
     };
