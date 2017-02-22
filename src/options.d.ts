@@ -12,9 +12,8 @@ interface Options extends ts.CompilerOptions {
     skipMetadataEmit?: boolean;
     strictMetadataEmit?: boolean;
     skipTemplateCodegen?: boolean;
-    bundleIndex?: string;
-    libraryIndex?: string;
-    importAs?: string;
+    flatModuleOutFile?: string;
+    flatModuleId?: string;
     generateCodeForLibraries?: boolean;
     annotateForClosureCompiler?: boolean;
     annotationsAs?: 'decorators' | 'static fields';

@@ -83,7 +83,7 @@ var MetadataWriterHost = (function (_super) {
             if (sourceFiles.length > 1) {
                 throw new Error('Bundled emit with --out is not supported');
             }
-            if (!_this.ngOptions.skipMetadataEmit && !_this.ngOptions.bundleIndex) {
+            if (!_this.ngOptions.skipMetadataEmit && !_this.ngOptions.flatModuleOutFile) {
                 _this.writeMetadata(fileName, sourceFiles[0]);
             }
         };
