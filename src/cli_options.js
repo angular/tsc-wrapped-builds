@@ -22,9 +22,11 @@ exports.CliOptions = CliOptions;
 var I18nExtractionCliOptions = (function (_super) {
     __extends(I18nExtractionCliOptions, _super);
     function I18nExtractionCliOptions(_a) {
-        var _b = _a.i18nFormat, i18nFormat = _b === void 0 ? null : _b;
+        var _b = _a.i18nFormat, i18nFormat = _b === void 0 ? null : _b, _c = _a.locale, locale = _c === void 0 ? null : _c, _d = _a.outFile, outFile = _d === void 0 ? null : _d;
         var _this = _super.call(this, {}) || this;
         _this.i18nFormat = i18nFormat;
+        _this.locale = locale;
+        _this.outFile = outFile;
         return _this;
     }
     return I18nExtractionCliOptions;
