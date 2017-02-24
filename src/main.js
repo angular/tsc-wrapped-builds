@@ -20,7 +20,7 @@ var tsc_2 = require("./tsc");
 exports.UserError = tsc_2.UserError;
 var DTS = /\.d\.ts$/;
 var JS_EXT = /(\.js|)$/;
-function main(project, cliOptions, codegen, options, skipImportRename) {
+function main(project, cliOptions, codegen, options) {
     try {
         var projectDir = project;
         // project is vinyl like file object
@@ -98,8 +98,7 @@ function main(project, cliOptions, codegen, options, skipImportRename) {
             var tsickleCompilerHostOptions = {
                 googmodule: false,
                 untyped: true,
-                convertIndexImportShorthand: !skipImportRename &&
-                    ngOptions_1.target === ts.ScriptTarget.ES2015,
+                convertIndexImportShorthand: ngOptions_1.target === ts.ScriptTarget.ES2015,
             };
             var tsickleHost = {
                 shouldSkipTsickleProcessing: function (fileName) { return /\.d\.ts$/.test(fileName); },
@@ -150,18 +149,12 @@ exports.main = main;
 // CLI entry point
 if (require.main === module) {
     var args_1 = process.argv.slice(2);
-    var idx = args_1.indexOf('--skipImportRename');
-    var skipImportRename = false;
-    if (idx !== -1) {
-        args_1.splice(idx, 1);
-        skipImportRename = true;
-    }
     var _a = ts.parseCommandLine(args_1), options = _a.options, fileNames = _a.fileNames, errors = _a.errors;
     tsc_1.check(errors);
     var project = options.project || '.';
     // TODO(alexeagle): command line should be TSC-compatible, remove "CliOptions" here
     var cliOptions = new cli_options_1.CliOptions(require('minimist')(args_1));
-    main(project, cliOptions, null, options, skipImportRename)
+    main(project, cliOptions, null, options)
         .then(function (exitCode) { return process.exit(exitCode); })
         .catch(function (e) {
         console.error(e.stack);
