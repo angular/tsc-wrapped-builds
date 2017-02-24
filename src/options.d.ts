@@ -19,5 +19,6 @@ interface Options extends ts.CompilerOptions {
     annotationsAs?: 'decorators' | 'static fields';
     trace?: boolean;
     debug?: boolean;
+    enableLegacyTemplate?: boolean;
 }
 export default Options;
