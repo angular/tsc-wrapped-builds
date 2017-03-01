@@ -24,6 +24,7 @@ describe('Collector', function () {
             '/promise.ts',
             '/unsupported-1.ts',
             '/unsupported-2.ts',
+            '/unsupported-3.ts',
             'class-arity.ts',
             'import-star.ts',
             'exported-classes.ts',
@@ -562,9 +563,14 @@ describe('Collector', function () {
                 .toThrowError(/Reference to a non-exported function/);
         });
         it('should throw for references to unexpected types', function () {
-            var unsupported1 = program.getSourceFile('/unsupported-2.ts');
-            expect(function () { return collector.getMetadata(unsupported1, true); })
+            var unsupported2 = program.getSourceFile('/unsupported-2.ts');
+            expect(function () { return collector.getMetadata(unsupported2, true); })
                 .toThrowError(/Reference to non-exported class/);
+        });
+        it('should throw for errors in a static method', function () {
+            var unsupported3 = program.getSourceFile('/unsupported-3.ts');
+            expect(function () { return collector.getMetadata(unsupported3, true); })
+                .toThrowError(/Reference to a non-exported class/);
         });
     });
     describe('with invalid input', function () {
@@ -657,6 +663,7 @@ var FILES = {
     'class-arity.ts': "\n    export class Zero {}\n    export class One<T> {}\n    export class Two<T, V> {}\n    export class Three<T1, T2, T3> {}\n    export class Nine<T1, T2, T3, T4, T5, T6, T7, T8, T9> {}\n  ",
     'unsupported-1.ts': "\n    export let {a, b} = {a: 1, b: 2};\n    export let [c, d] = [1, 2];\n    export let e;\n  ",
     'unsupported-2.ts': "\n    import {Injectable} from 'angular2/core';\n\n    class Foo {}\n\n    @Injectable()\n    export class Bar {\n      constructor(private f: Foo) {}\n    }\n  ",
+    'unsupported-3.ts': "\n    class Foo {}\n\n    export class SomeClass {\n      static someStatic() {\n        return Foo;\n      }\n    }\n  ",
     'import-star.ts': "\n    import {Injectable} from 'angular2/core';\n    import * as common from 'angular2/common';\n\n    @Injectable()\n    export class SomeClass {\n      constructor(private f: common.NgFor) {}\n    }\n  ",
     'exported-classes.ts': "\n    export class SimpleClass {}\n    export abstract class AbstractClass {}\n    export declare class DeclaredClass {}\n  ",
     'class-inheritance-parent.ts': "\n    export class ParentClassFromOtherFile {}\n  ",

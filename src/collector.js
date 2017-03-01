@@ -559,6 +559,17 @@ function validateMetadata(sourceFile, nodeMap, metadata) {
             Object.getOwnPropertyNames(classData.members)
                 .forEach(function (name) { return classData.members[name].forEach(function (m) { return validateMember(classData, m); }); });
         }
+        if (classData.statics) {
+            Object.getOwnPropertyNames(classData.statics).forEach(function (name) {
+                var staticMember = classData.statics[name];
+                if (schema_1.isFunctionMetadata(staticMember)) {
+                    validateExpression(staticMember.value);
+                }
+                else {
+                    validateExpression(staticMember);
+                }
+            });
+        }
     }
     function validateFunction(functionDeclaration) {
         if (functionDeclaration.value) {
