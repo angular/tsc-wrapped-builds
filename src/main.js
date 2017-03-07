@@ -42,10 +42,6 @@ function main(project, cliOptions, codegen, options) {
         if (diagnostics_1)
             ts.performance.enable();
         var host_1 = ts.createCompilerHost(parsed_1.options, true);
-        // HACK: patch the realpath to solve symlink issue here:
-        // https://github.com/Microsoft/TypeScript/issues/9552
-        // todo(misko): remove once facade symlinks are removed
-        host_1.realpath = function (path) { return path; };
         // If the comilation is a flat module index then produce the flat module index
         // metadata and the synthetic flat module index.
         if (ngOptions_1.flatModuleOutFile && !ngOptions_1.skipMetadataEmit) {

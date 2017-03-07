@@ -403,7 +403,8 @@ var MetadataCollector = (function () {
                                 metadata[exportedIdentifierName(nameNode)] = recordEntry(varValue, node);
                                 exported = true;
                             }
-                            if (evaluator_1.isPrimitive(varValue)) {
+                            if (typeof varValue == 'string' || typeof varValue == 'number' ||
+                                typeof varValue == 'boolean') {
                                 locals.define(nameNode.text, varValue);
                             }
                             else if (!exported) {
