@@ -194,9 +194,6 @@ var MetadataBundler = (function () {
         if (schema_1.isFunctionMetadata(value)) {
             return this.convertFunction(moduleName, value);
         }
-        if (schema_1.isInterfaceMetadata(value)) {
-            return value;
-        }
         return this.convertValue(moduleName, value);
     };
     MetadataBundler.prototype.convertClass = function (moduleName, value) {
