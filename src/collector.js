@@ -237,15 +237,11 @@ var MetadataCollector = (function () {
             }
         });
         var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
-        var isExported = function (node) {
-            return isExport(node) || isExportedIdentifier(node.name);
-        };
+        var isExported = function (node) { return isExport(node) || isExportedIdentifier(node.name); };
         var exportedIdentifierName = function (identifier) {
             return exportMap.get(identifier.text) || identifier.text;
         };
-        var exportedName = function (node) {
-            return exportedIdentifierName(node.name);
-        };
+        var exportedName = function (node) { return exportedIdentifierName(node.name); };
         // Predeclare classes and functions
         ts.forEachChild(sourceFile, function (node) {
             switch (node.kind) {
@@ -259,6 +255,14 @@ var MetadataCollector = (function () {
                         else {
                             locals.define(className, errorSym('Reference to non-exported class', node, { className: className }));
                         }
+                    }
+                    break;
+                case ts.SyntaxKind.InterfaceDeclaration:
+                    var interfaceDeclaration = node;
+                    if (interfaceDeclaration.name) {
+                        var interfaceName = interfaceDeclaration.name.text;
+                        // All references to interfaces should be converted to references to `any`.
+                        locals.define(interfaceName, { __symbolic: 'reference', name: 'any' });
                     }
                     break;
                 case ts.SyntaxKind.FunctionDeclaration:
@@ -321,6 +325,14 @@ var MetadataCollector = (function () {
                         }
                     }
                     // Otherwise don't record metadata for the class.
+                    break;
+                case ts.SyntaxKind.InterfaceDeclaration:
+                    var interfaceDeclaration = node;
+                    if (interfaceDeclaration.name && isExported(interfaceDeclaration)) {
+                        if (!metadata)
+                            metadata = {};
+                        metadata[exportedName(interfaceDeclaration)] = { __symbolic: 'interface' };
+                    }
                     break;
                 case ts.SyntaxKind.FunctionDeclaration:
                     // Record functions that return a single value. Record the parameter

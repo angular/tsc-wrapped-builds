@@ -71,7 +71,19 @@ function main(project, cliOptions, codegen, options) {
             host_1 = new compiler_host_1.SyntheticIndexHost(host_1, { name: name_1, content: content, metadata: metadata });
             parsed_1.fileNames.push(name_1);
         }
-        var program_1 = createProgram_1(host_1);
+        var tsickleCompilerHostOptions = {
+            googmodule: false,
+            untyped: true,
+            convertIndexImportShorthand: ngOptions_1.target === ts.ScriptTarget.ES2015,
+        };
+        var tsickleHost = {
+            shouldSkipTsickleProcessing: function (fileName) { return /\.d\.ts$/.test(fileName); },
+            pathToModuleName: function (context, importPath) { return ''; },
+            shouldIgnoreWarningsForPath: function (filePath) { return false; },
+            fileNameToModuleId: function (fileName) { return fileName; },
+        };
+        var tsickleCompilerHost_1 = new tsickle.TsickleCompilerHost(host_1, ngOptions_1, tsickleCompilerHostOptions, tsickleHost);
+        var program_1 = createProgram_1(tsickleCompilerHost_1);
         var errors = program_1.getOptionsDiagnostics();
         tsc_1.check(errors);
         if (ngOptions_1.skipTemplateCodegen || !codegen) {
@@ -82,45 +94,31 @@ function main(project, cliOptions, codegen, options) {
         return codegen(ngOptions_1, cliOptions, program_1, host_1).then(function () {
             if (diagnostics_1)
                 console.timeEnd('NG codegen');
-            var definitionsHost = host_1;
+            var definitionsHost = tsickleCompilerHost_1;
             if (!ngOptions_1.skipMetadataEmit) {
-                definitionsHost = new compiler_host_1.MetadataWriterHost(host_1, ngOptions_1);
+                definitionsHost = new compiler_host_1.MetadataWriterHost(tsickleCompilerHost_1, ngOptions_1);
             }
             // Create a new program since codegen files were created after making the old program
             var programWithCodegen = createProgram_1(definitionsHost, program_1);
             tsc_1.tsc.typeCheck(host_1, programWithCodegen);
-            var preprocessHost = host_1;
             var programForJsEmit = programWithCodegen;
-            var tsickleCompilerHostOptions = {
-                googmodule: false,
-                untyped: true,
-                convertIndexImportShorthand: ngOptions_1.target === ts.ScriptTarget.ES2015,
-            };
-            var tsickleHost = {
-                shouldSkipTsickleProcessing: function (fileName) { return /\.d\.ts$/.test(fileName); },
-                pathToModuleName: function (context, importPath) { return ''; },
-                shouldIgnoreWarningsForPath: function (filePath) { return false; },
-                fileNameToModuleId: function (fileName) { return fileName; },
-            };
-            var tsickleCompilerHost = new tsickle.TsickleCompilerHost(preprocessHost, ngOptions_1, tsickleCompilerHostOptions, tsickleHost);
             if (ngOptions_1.annotationsAs !== 'decorators') {
                 if (diagnostics_1)
                     console.time('NG downlevel');
-                tsickleCompilerHost.reconfigureForRun(programForJsEmit, tsickle.Pass.DECORATOR_DOWNLEVEL);
+                tsickleCompilerHost_1.reconfigureForRun(programForJsEmit, tsickle.Pass.DECORATOR_DOWNLEVEL);
                 // A program can be re-used only once; save the programWithCodegen to be reused by
                 // metadataWriter
-                programForJsEmit = createProgram_1(tsickleCompilerHost);
-                tsc_1.check(tsickleCompilerHost.diagnostics);
-                preprocessHost = tsickleCompilerHost;
+                programForJsEmit = createProgram_1(tsickleCompilerHost_1);
+                tsc_1.check(tsickleCompilerHost_1.diagnostics);
                 if (diagnostics_1)
                     console.timeEnd('NG downlevel');
             }
             if (ngOptions_1.annotateForClosureCompiler) {
                 if (diagnostics_1)
                     console.time('NG JSDoc');
-                tsickleCompilerHost.reconfigureForRun(programForJsEmit, tsickle.Pass.CLOSURIZE);
-                programForJsEmit = createProgram_1(tsickleCompilerHost);
-                tsc_1.check(tsickleCompilerHost.diagnostics);
+                tsickleCompilerHost_1.reconfigureForRun(programForJsEmit, tsickle.Pass.CLOSURIZE);
+                programForJsEmit = createProgram_1(tsickleCompilerHost_1);
+                tsc_1.check(tsickleCompilerHost_1.diagnostics);
                 if (diagnostics_1)
                     console.timeEnd('NG JSDoc');
             }

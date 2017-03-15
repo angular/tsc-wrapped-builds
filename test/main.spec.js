@@ -136,5 +136,19 @@ describe('tsc-wrapped', function () {
         })
             .catch(function (e) { return done.fail(e); });
     });
+    it('should accept input source maps', function (done) {
+        write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": true,\n        \"moduleResolution\": \"node\",\n        \"target\": \"es2015\",\n        \"sourceMap\": true\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
+        // Provide a file called test.ts that has an inline source map
+        // which says that it was transpiled from a file other_test.ts
+        // with exactly the same content.
+        write('test.ts', "const x = 3;\n//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIm90aGVyX3Rlc3QudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsTUFBTSxFQUFFLEVBQUUsQ0FBQyIsImZpbGUiOiIuLi90ZXN0LnRzIiwic291cmNlUm9vdCI6IiJ9");
+        main_1.main(basePath, { basePath: basePath })
+            .then(function () {
+            var out = readOut('js.map');
+            expect(out).toContain('"sources":["other_test.ts"]');
+            done();
+        })
+            .catch(function (e) { return done.fail(e); });
+    });
 });
 //# sourceMappingURL=main.spec.js.map
