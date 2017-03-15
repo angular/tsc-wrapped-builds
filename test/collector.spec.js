@@ -46,7 +46,8 @@ describe('Collector', function () {
             'static-method-with-default.ts',
             'class-inheritance.ts',
             'class-inheritance-parent.ts',
-            'class-inheritance-declarations.d.ts'
+            'class-inheritance-declarations.d.ts',
+            'interface-reference.ts'
         ]);
         service = ts.createLanguageService(host, documentRegistry);
         program = service.getProgram();
@@ -54,9 +55,14 @@ describe('Collector', function () {
     });
     it('should not have errors in test data', function () { typescript_mocks_1.expectValidSources(service, program); });
     it('should return undefined for modules that have no metadata', function () {
-        var sourceFile = program.getSourceFile('app/hero.ts');
+        var sourceFile = program.getSourceFile('app/empty.ts');
         var metadata = collector.getMetadata(sourceFile);
         expect(metadata).toBeUndefined();
+    });
+    it('should return an interface reference for interfaces', function () {
+        var sourceFile = program.getSourceFile('app/hero.ts');
+        var metadata = collector.getMetadata(sourceFile);
+        expect(metadata).toEqual({ __symbolic: 'module', version: 3, metadata: { Hero: { __symbolic: 'interface' } } });
     });
     it('should be able to collect a simple component\'s metadata', function () {
         var sourceFile = program.getSourceFile('app/hero-detail.component.ts');
@@ -552,6 +558,21 @@ describe('Collector', function () {
             }
         });
     });
+    it('should collect any for interface parameter reference', function () {
+        var source = program.getSourceFile('/interface-reference.ts');
+        var metadata = collector.getMetadata(source);
+        expect(metadata.metadata['SomeClass'].members).toEqual({
+            __ctor__: [{
+                    __symbolic: 'constructor',
+                    parameterDecorators: [[{
+                                __symbolic: 'call',
+                                expression: { __symbolic: 'reference', module: 'angular2/core', name: 'Inject' },
+                                arguments: ['a']
+                            }]],
+                    parameters: [{ __symbolic: 'reference', name: 'any' }]
+                }]
+        });
+    });
     describe('in strict mode', function () {
         it('should throw if an error symbol is collecting a reference to a non-exported symbol', function () {
             var source = program.getSourceFile('/local-symbol-ref.ts');
@@ -648,6 +669,7 @@ var FILES = {
             '`' +
             ",\n        directives: [HeroDetailComponent, common.NgFor],\n        providers: [HeroService],\n        pipes: [common.LowerCasePipe, common.UpperCasePipe]\n      })\n      export class AppComponent implements OnInit {\n        public title = 'Tour of Heroes';\n        public heroes: Hero[];\n        public selectedHero: Hero;\n\n        constructor(private _heroService: HeroService) { }\n\n        onSelect(hero: Hero) { this.selectedHero = hero; }\n\n        ngOnInit() {\n            this.getHeroes()\n        }\n\n        getHeroes() {\n          this._heroService.getHeroesSlowly().then(heros => this.heroes = heros);\n        }\n      }",
         'hero.ts': "\n      export interface Hero {\n        id: number;\n        name: string;\n      }",
+        'empty.ts': "",
         'hero-detail.component.ts': "\n      import {Component, Input} from 'angular2/core';\n      import {Hero} from './hero';\n\n      @Component({\n        selector: 'my-hero-detail',\n        template: " +
             '`' +
             "\n        <div *ngIf=\"hero\">\n          <h2>{{hero.name}} details!</h2>\n          <div><label>id: </label>{{hero.id}}</div>\n          <div>\n            <label>name: </label>\n            <input [(ngModel)]=\"hero.name\" placeholder=\"name\"/>\n          </div>\n        </div>\n      " +
@@ -664,6 +686,7 @@ var FILES = {
     'unsupported-1.ts': "\n    export let {a, b} = {a: 1, b: 2};\n    export let [c, d] = [1, 2];\n    export let e;\n  ",
     'unsupported-2.ts': "\n    import {Injectable} from 'angular2/core';\n\n    class Foo {}\n\n    @Injectable()\n    export class Bar {\n      constructor(private f: Foo) {}\n    }\n  ",
     'unsupported-3.ts': "\n    class Foo {}\n\n    export class SomeClass {\n      static someStatic() {\n        return Foo;\n      }\n    }\n  ",
+    'interface-reference.ts': "\n    import {Injectable, Inject} from 'angular2/core';\n    export interface Test {}\n\n    @Injectable()\n    export class SomeClass {\n      constructor(@Inject(\"a\") test: Test) {}\n    }\n  ",
     'import-star.ts': "\n    import {Injectable} from 'angular2/core';\n    import * as common from 'angular2/common';\n\n    @Injectable()\n    export class SomeClass {\n      constructor(private f: common.NgFor) {}\n    }\n  ",
     'exported-classes.ts': "\n    export class SimpleClass {}\n    export abstract class AbstractClass {}\n    export declare class DeclaredClass {}\n  ",
     'class-inheritance-parent.ts': "\n    export class ParentClassFromOtherFile {}\n  ",
@@ -686,7 +709,7 @@ var FILES = {
     'local-symbol-ref-func.ts': "\n    var localSymbol: any[];\n\n    export function foo(index: number): string {\n      return localSymbol[index];\n    }\n  ",
     'node_modules': {
         'angular2': {
-            'core.d.ts': "\n          export interface Type extends Function { }\n          export interface TypeDecorator {\n              <T extends Type>(type: T): T;\n              (target: Object, propertyKey?: string | symbol, parameterIndex?: number): void;\n              annotations: any[];\n          }\n          export interface ComponentDecorator extends TypeDecorator { }\n          export interface ComponentFactory {\n              (obj: {\n                  selector?: string;\n                  inputs?: string[];\n                  outputs?: string[];\n                  properties?: string[];\n                  events?: string[];\n                  host?: {\n                      [key: string]: string;\n                  };\n                  bindings?: any[];\n                  providers?: any[];\n                  exportAs?: string;\n                  moduleId?: string;\n                  queries?: {\n                      [key: string]: any;\n                  };\n                  viewBindings?: any[];\n                  viewProviders?: any[];\n                  templateUrl?: string;\n                  template?: string;\n                  styleUrls?: string[];\n                  styles?: string[];\n                  directives?: Array<Type | any[]>;\n                  pipes?: Array<Type | any[]>;\n              }): ComponentDecorator;\n          }\n          export declare var Component: ComponentFactory;\n          export interface InputFactory {\n              (bindingPropertyName?: string): any;\n              new (bindingPropertyName?: string): any;\n          }\n          export declare var Input: InputFactory;\n          export interface InjectableFactory {\n              (): any;\n          }\n          export declare var Injectable: InjectableFactory;\n          export interface OnInit {\n              ngOnInit(): any;\n          }\n          export class Validators {\n            static required(): void;\n          }\n      ",
+            'core.d.ts': "\n          export interface Type extends Function { }\n          export interface TypeDecorator {\n              <T extends Type>(type: T): T;\n              (target: Object, propertyKey?: string | symbol, parameterIndex?: number): void;\n              annotations: any[];\n          }\n          export interface ComponentDecorator extends TypeDecorator { }\n          export interface ComponentFactory {\n              (obj: {\n                  selector?: string;\n                  inputs?: string[];\n                  outputs?: string[];\n                  properties?: string[];\n                  events?: string[];\n                  host?: {\n                      [key: string]: string;\n                  };\n                  bindings?: any[];\n                  providers?: any[];\n                  exportAs?: string;\n                  moduleId?: string;\n                  queries?: {\n                      [key: string]: any;\n                  };\n                  viewBindings?: any[];\n                  viewProviders?: any[];\n                  templateUrl?: string;\n                  template?: string;\n                  styleUrls?: string[];\n                  styles?: string[];\n                  directives?: Array<Type | any[]>;\n                  pipes?: Array<Type | any[]>;\n              }): ComponentDecorator;\n          }\n          export declare var Component: ComponentFactory;\n          export interface InputFactory {\n              (bindingPropertyName?: string): any;\n              new (bindingPropertyName?: string): any;\n          }\n          export declare var Input: InputFactory;\n          export interface InjectableFactory {\n              (): any;\n          }\n          export declare var Injectable: InjectableFactory;\n          export interface InjectFactory {\n            (binding?: any): any;\n            new (binding?: any): any;\n          }\n          export declare var Inject: InjectFactory;\n          export interface OnInit {\n              ngOnInit(): any;\n          }\n          export class Validators {\n            static required(): void;\n          }\n      ",
             'common.d.ts': "\n        export declare class NgFor {\n            ngForOf: any;\n            ngForTemplate: any;\n            ngDoCheck(): void;\n        }\n        export declare class LowerCasePipe  {\n          transform(value: string, args?: any[]): string;\n        }\n        export declare class UpperCasePipe {\n            transform(value: string, args?: any[]): string;\n        }\n      "
         }
     }
