@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 export declare const VERSION = 3;
-export declare type MetadataEntry = ClassMetadata | FunctionMetadata | MetadataValue;
+export declare type MetadataEntry = ClassMetadata | InterfaceMetadata | FunctionMetadata | MetadataValue;
 export interface ModuleMetadata {
     __symbolic: 'module';
     version: number;
@@ -35,6 +35,10 @@ export interface ClassMetadata {
     };
 }
 export declare function isClassMetadata(value: any): value is ClassMetadata;
+export interface InterfaceMetadata {
+    __symbolic: 'interface';
+}
+export declare function isInterfaceMetadata(value: any): value is InterfaceMetadata;
 export interface MetadataMap {
     [name: string]: MemberMetadata[];
 }
