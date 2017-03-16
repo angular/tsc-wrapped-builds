@@ -96,7 +96,10 @@ function main(project, cliOptions, codegen, options) {
                 console.timeEnd('NG codegen');
             var definitionsHost = tsickleCompilerHost_1;
             if (!ngOptions_1.skipMetadataEmit) {
-                definitionsHost = new compiler_host_1.MetadataWriterHost(tsickleCompilerHost_1, ngOptions_1);
+                // if tsickle is not not used for emitting, but we do use the MetadataWriterHost,
+                // it also needs to emit the js files.
+                var emitJsFiles = ngOptions_1.annotationsAs === 'decorators' && !ngOptions_1.annotateForClosureCompiler;
+                definitionsHost = new compiler_host_1.MetadataWriterHost(tsickleCompilerHost_1, ngOptions_1, emitJsFiles);
             }
             // Create a new program since codegen files were created after making the old program
             var programWithCodegen = createProgram_1(definitionsHost, program_1);
