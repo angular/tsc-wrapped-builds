@@ -33,7 +33,9 @@ export declare class MetadataWriterHost extends DelegatingHost {
     writeFile: ts.WriteFileCallback;
 }
 export declare class SyntheticIndexHost extends DelegatingHost {
-    private syntheticIndex;
+    private normalSyntheticIndexName;
+    private indexContent;
+    private indexMetadata;
     constructor(delegate: ts.CompilerHost, syntheticIndex: {
         name: string;
         content: string;

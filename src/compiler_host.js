@@ -12,6 +12,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var fs_1 = require("fs");
+var path_1 = require("path");
 var ts = require("typescript");
 var collector_1 = require("./collector");
 function formatDiagnostics(d) {
@@ -97,7 +98,7 @@ var MetadataWriterHost = (function (_super) {
         // TODO: replace with DTS filePath when https://github.com/Microsoft/TypeScript/pull/8412 is
         // released
         if (/\.js$/.test(emitFilePath)) {
-            var path_1 = emitFilePath.replace(/*DTS*/ /\.js$/, '.metadata.json');
+            var path_2 = emitFilePath.replace(/*DTS*/ /\.js$/, '.metadata.json');
             // Beginning with 2.1, TypeScript transforms the source tree before emitting it.
             // We need the original, unmodified, tree which might be several levels back
             // depending on the number of transforms performed. All SourceFile's prior to 2.1
@@ -111,7 +112,7 @@ var MetadataWriterHost = (function (_super) {
             var metadatas = [metadata, metadata1].filter(function (e) { return !!e; });
             if (metadatas.length) {
                 var metadataText = JSON.stringify(metadatas);
-                fs_1.writeFileSync(path_1, metadataText, { encoding: 'utf-8' });
+                fs_1.writeFileSync(path_2, metadataText, { encoding: 'utf-8' });
             }
         }
     };
@@ -122,29 +123,33 @@ var SyntheticIndexHost = (function (_super) {
     __extends(SyntheticIndexHost, _super);
     function SyntheticIndexHost(delegate, syntheticIndex) {
         var _this = _super.call(this, delegate) || this;
-        _this.syntheticIndex = syntheticIndex;
         _this.fileExists = function (fileName) {
-            return fileName == _this.syntheticIndex.name || _this.delegate.fileExists(fileName);
+            return path_1.normalize(fileName) == _this.normalSyntheticIndexName ||
+                _this.delegate.fileExists(fileName);
         };
         _this.readFile = function (fileName) {
-            return fileName == _this.syntheticIndex.name ? _this.syntheticIndex.content :
+            return path_1.normalize(fileName) == _this.normalSyntheticIndexName ?
+                _this.indexContent :
                 _this.delegate.readFile(fileName);
         };
         _this.getSourceFile = function (fileName, languageVersion, onError) {
-            if (fileName == _this.syntheticIndex.name) {
-                return ts.createSourceFile(fileName, _this.syntheticIndex.content, languageVersion, true);
+            if (path_1.normalize(fileName) == _this.normalSyntheticIndexName) {
+                return ts.createSourceFile(fileName, _this.indexContent, languageVersion, true);
             }
             return _this.delegate.getSourceFile(fileName, languageVersion, onError);
         };
         _this.writeFile = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
             _this.delegate.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
             if (fileName.match(DTS) && sourceFiles && sourceFiles.length == 1 &&
-                sourceFiles[0].fileName == _this.syntheticIndex.name) {
+                path_1.normalize(sourceFiles[0].fileName) == _this.normalSyntheticIndexName) {
                 // If we are writing the synthetic index, write the metadata along side.
                 var metadataName = fileName.replace(DTS, '.metadata.json');
-                fs_1.writeFileSync(metadataName, _this.syntheticIndex.metadata, 'utf8');
+                fs_1.writeFileSync(metadataName, _this.indexMetadata, 'utf8');
             }
         };
+        _this.normalSyntheticIndexName = path_1.normalize(syntheticIndex.name);
+        _this.indexContent = syntheticIndex.content;
+        _this.indexMetadata = syntheticIndex.metadata;
         return _this;
     }
     return SyntheticIndexHost;
