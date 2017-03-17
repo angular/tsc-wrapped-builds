@@ -59,15 +59,19 @@ var IGNORED_FILES = /\.ngfactory\.js$|\.ngstyle\.js$/;
 var DTS = /\.d\.ts$/;
 var MetadataWriterHost = (function (_super) {
     __extends(MetadataWriterHost, _super);
-    function MetadataWriterHost(delegate, ngOptions) {
+    function MetadataWriterHost(delegate, ngOptions, emitAllFiles) {
         var _this = _super.call(this, delegate) || this;
         _this.ngOptions = ngOptions;
+        _this.emitAllFiles = emitAllFiles;
         _this.metadataCollector = new collector_1.MetadataCollector({ quotedNames: true });
         _this.metadataCollector1 = new collector_1.MetadataCollector({ version: 1 });
         _this.writeFile = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
-            if (/\.d\.ts$/.test(fileName)) {
+            var isDts = /\.d\.ts$/.test(fileName);
+            if (_this.emitAllFiles || isDts) {
                 // Let the original file be written first; this takes care of creating parent directories
                 _this.delegate.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+            }
+            if (isDts) {
                 // TODO: remove this early return after https://github.com/Microsoft/TypeScript/pull/8412
                 // is
                 // released

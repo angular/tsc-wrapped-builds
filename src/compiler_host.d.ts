@@ -25,9 +25,10 @@ export declare abstract class DelegatingHost implements ts.CompilerHost {
 }
 export declare class MetadataWriterHost extends DelegatingHost {
     private ngOptions;
+    private emitAllFiles;
     private metadataCollector;
     private metadataCollector1;
-    constructor(delegate: ts.CompilerHost, ngOptions: NgOptions);
+    constructor(delegate: ts.CompilerHost, ngOptions: NgOptions, emitAllFiles: boolean);
     private writeMetadata(emitFilePath, sourceFile);
     writeFile: ts.WriteFileCallback;
 }

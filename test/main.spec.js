@@ -96,6 +96,22 @@ describe('tsc-wrapped', function () {
         })
             .catch(function (e) { return done.fail(e); });
     });
+    it('should allow all options disabled with metadata emit', function (done) {
+        write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": false,\n        \"module\": \"es2015\",\n        \"moduleResolution\": \"node\"\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": false,\n        \"annotationsAs\": \"decorators\",\n        \"skipMetadataEmit\": false,\n        \"skipTemplateCodegen\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
+        main_1.main(basePath, { basePath: basePath })
+            .then(function () {
+            var out = readOut('js');
+            // TypeScript's decorator emit
+            expect(out).toContain('__decorate');
+            // Not annotated for Closure compiler
+            expect(out).not.toContain('* @param {?} x');
+            expect(function () { return fs.accessSync(path.join(basePath, 'built', 'test.d.ts')); }).toThrow();
+            var metadata = readOut('metadata.json');
+            expect(metadata).toContain('"Comp":{"__symbolic":"class"');
+            done();
+        })
+            .catch(function (e) { return done.fail(e); });
+    });
     it('should allow JSDoc annotations without decorator downleveling', function (done) {
         write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": true\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": true,\n        \"annotationsAs\": \"decorators\"\n      },\n      \"files\": [\"test.ts\"]\n    }");
         main_1.main(basePath, { basePath: basePath }).then(function () { return done(); }).catch(function (e) { return done.fail(e); });
@@ -141,7 +157,25 @@ describe('tsc-wrapped', function () {
         // Provide a file called test.ts that has an inline source map
         // which says that it was transpiled from a file other_test.ts
         // with exactly the same content.
-        write('test.ts', "const x = 3;\n//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIm90aGVyX3Rlc3QudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsTUFBTSxFQUFFLEVBQUUsQ0FBQyIsImZpbGUiOiIuLi90ZXN0LnRzIiwic291cmNlUm9vdCI6IiJ9");
+        var inputSourceMap = "{\"version\":3,\"sources\":[\"other_test.ts\"],\"names\":[],\"mappings\":\"AAAA,MAAM,EAAE,EAAE,CAAC\",\"file\":\"../test.ts\",\"sourceRoot\":\"\"}";
+        var encodedSourceMap = new Buffer(inputSourceMap, 'utf8').toString('base64');
+        write('test.ts', "const x = 3;\n//# sourceMappingURL=data:application/json;base64," + encodedSourceMap);
+        main_1.main(basePath, { basePath: basePath })
+            .then(function () {
+            var out = readOut('js.map');
+            expect(out).toContain('"sources":["other_test.ts"]');
+            done();
+        })
+            .catch(function (e) { return done.fail(e); });
+    });
+    it("should accept input source maps that don't match the file name", function (done) {
+        write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": true,\n        \"moduleResolution\": \"node\",\n        \"target\": \"es2015\",\n        \"sourceMap\": true\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
+        // Provide a file called test.ts that has an inline source map
+        // which says that it was transpiled from a file other_test.ts
+        // with exactly the same content.
+        var inputSourceMap = "{\"version\":3,\"sources\":[\"other_test.ts\"],\"names\":[],\"mappings\":\"AAAA,MAAM,EAAE,EAAE,CAAC\",\"file\":\"test.ts\",\"sourceRoot\":\"\"}";
+        var encodedSourceMap = new Buffer(inputSourceMap, 'utf8').toString('base64');
+        write('test.ts', "const x = 3;\n//# sourceMappingURL=data:application/json;base64," + encodedSourceMap);
         main_1.main(basePath, { basePath: basePath })
             .then(function () {
             var out = readOut('js.map');
