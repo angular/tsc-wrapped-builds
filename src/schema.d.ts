@@ -15,6 +15,9 @@ export interface ModuleMetadata {
     metadata: {
         [name: string]: MetadataEntry;
     };
+    origins?: {
+        [name: string]: string;
+    };
 }
 export declare function isModuleMetadata(value: any): value is ModuleMetadata;
 export interface ModuleExportMetadata {
