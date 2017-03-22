@@ -430,33 +430,14 @@ var CompilerHostAdapter = (function () {
 exports.CompilerHostAdapter = CompilerHostAdapter;
 function resolveModule(importName, from) {
     if (importName.startsWith('.') && from) {
-        return normalize(path.join(path.dirname(from), importName));
+        var normalPath = path.normalize(path.join(path.dirname(from), importName));
+        if (!normalPath.startsWith('.') && from.startsWith('.')) {
+            // path.normalize() preserves leading '../' but not './'. This adds it back.
+            return "." + path.sep + normalPath;
+        }
+        return normalPath;
     }
     return importName;
-}
-function normalize(path) {
-    var parts = path.split('/');
-    var segments = [];
-    for (var _i = 0, parts_1 = parts; _i < parts_1.length; _i++) {
-        var part = parts_1[_i];
-        switch (part) {
-            case '':
-            case '.':
-                continue;
-            case '..':
-                segments.pop();
-                break;
-            default:
-                segments.push(part);
-        }
-    }
-    if (segments.length) {
-        segments.unshift(path.startsWith('/') ? '' : '.');
-        return segments.join('/');
-    }
-    else {
-        return '.';
-    }
 }
 function isPrimitive(o) {
     return o === null || (typeof o !== 'function' && typeof o !== 'object');
