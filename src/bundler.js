@@ -31,7 +31,7 @@ var MetadataBundler = (function () {
         var exportedSymbols = this.exportAll(this.rootModule);
         this.canonicalizeSymbols(exportedSymbols);
         // TODO: exports? e.g. a module re-exports a symbol from another bundle
-        var entries = this.getEntries(exportedSymbols);
+        var metadata = this.getEntries(exportedSymbols);
         var privates = Array.from(this.symbolMap.values())
             .filter(function (s) { return s.referenced && s.isPrivate; })
             .map(function (s) { return ({
@@ -39,8 +39,14 @@ var MetadataBundler = (function () {
             name: s.declaration.name,
             module: s.declaration.module
         }); });
+        var origins = Array.from(this.symbolMap.values())
+            .filter(function (s) { return s.referenced; })
+            .reduce(function (p, s) {
+            p[s.isPrivate ? s.privateName : s.name] = s.declaration.module;
+            return p;
+        }, {});
         return {
-            metadata: { __symbolic: 'module', version: schema_1.VERSION, metadata: entries, importAs: this.importAs },
+            metadata: { __symbolic: 'module', version: schema_1.VERSION, metadata: metadata, origins: origins, importAs: this.importAs },
             privates: privates
         };
     };
@@ -165,7 +171,6 @@ var MetadataBundler = (function () {
                 var name_3 = symbol.name;
                 if (symbol.isPrivate && !symbol.privateName) {
                     name_3 = newPrivateName();
-                    ;
                     symbol.privateName = name_3;
                 }
                 result[name_3] = symbol.value;

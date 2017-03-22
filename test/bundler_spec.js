@@ -19,9 +19,20 @@ describe('metadata bundler', function () {
         expect(Object.keys(result.metadata.metadata).sort()).toEqual([
             'ONE_CLASSES', 'One', 'OneMore', 'TWO_CLASSES', 'Two', 'TwoMore', 'ɵa', 'ɵb'
         ]);
+        var originalOne = './src/one';
+        var originalTwo = './src/two/index';
+        expect(Object.keys(result.metadata.origins)
+            .sort()
+            .map(function (name) { return ({ name: name, value: result.metadata.origins[name] }); }))
+            .toEqual([
+            { name: 'ONE_CLASSES', value: originalOne }, { name: 'One', value: originalOne },
+            { name: 'OneMore', value: originalOne }, { name: 'TWO_CLASSES', value: originalTwo },
+            { name: 'Two', value: originalTwo }, { name: 'TwoMore', value: originalTwo },
+            { name: 'ɵa', value: originalOne }, { name: 'ɵb', value: originalTwo }
+        ]);
         expect(result.privates).toEqual([
-            { privateName: 'ɵa', name: 'PrivateOne', module: './src/one' },
-            { privateName: 'ɵb', name: 'PrivateTwo', module: './src/two/index' }
+            { privateName: 'ɵa', name: 'PrivateOne', module: originalOne },
+            { privateName: 'ɵb', name: 'PrivateTwo', module: originalTwo }
         ]);
     });
     it('should be able to bundle an oddly constructed library', function () {
