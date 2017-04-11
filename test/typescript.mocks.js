@@ -52,7 +52,9 @@ var Host = (function () {
 }());
 exports.Host = Host;
 function open(directory, fileName) {
-    var names = fileName.split('/');
+    // Path might be normalized by the current node environment. But it could also happen that this
+    // path directly comes from the compiler in POSIX format. Support both separators for development.
+    var names = fileName.split(/[\\/]/);
     var current = directory;
     if (names.length && names[0] === '')
         names.shift();
