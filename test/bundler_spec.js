@@ -58,6 +58,15 @@ describe('metadata bundler', function () {
             { privateName: 'ɵb', name: 'PrivateTwo', module: './src/two/index' }
         ]);
     });
+    it('should not output windows paths in metadata', function () {
+        var host = new MockStringBundlerHost('/', {
+            'index.ts': "\n        export * from './exports/test';\n      ",
+            'exports': { 'test.ts': "export class TestExport {}" }
+        });
+        var bundler = new bundler_1.MetadataBundler('/index', undefined, host);
+        var result = bundler.getMetadataBundle();
+        expect(result.metadata.origins).toEqual({ 'TestExport': './exports/test' });
+    });
     it('should convert re-exported to the export', function () {
         var host = new MockStringBundlerHost('/', {
             'index.ts': "\n        export * from './bar';\n        export * from './foo';\n      ",
