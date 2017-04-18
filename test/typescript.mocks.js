@@ -92,6 +92,9 @@ var MockNode = (function () {
     MockNode.prototype.getText = function (sourceFile) { return ''; };
     MockNode.prototype.getFirstToken = function (sourceFile) { return null; };
     MockNode.prototype.getLastToken = function (sourceFile) { return null; };
+    MockNode.prototype.forEachChild = function (cbNode, cbNodeArray) {
+        return null;
+    };
     return MockNode;
 }());
 exports.MockNode = MockNode;
@@ -141,6 +144,7 @@ var MockSymbol = (function () {
     MockSymbol.prototype.getName = function () { return this.name; };
     MockSymbol.prototype.getDeclarations = function () { return [this.node]; };
     MockSymbol.prototype.getDocumentationComment = function () { return []; };
+    // TODO(vicb): removed in TS 2.2
     MockSymbol.prototype.getJsDocTags = function () { return []; };
     ;
     MockSymbol.of = function (name) { return new MockSymbol(name); };
