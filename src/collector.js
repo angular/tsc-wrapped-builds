@@ -76,7 +76,6 @@ var MetadataCollector = (function () {
                                 value: evaluator.evaluateNode(returnStatement.expression)
                             };
                             if (functionDeclaration.parameters.some(function (p) { return p.initializer != null; })) {
-                                var defaults = [];
                                 func.defaults = functionDeclaration.parameters.map(function (p) { return p.initializer && evaluator.evaluateNode(p.initializer); });
                             }
                             return recordEntry({ func: func, name: functionName }, functionDeclaration);
@@ -317,7 +316,6 @@ var MetadataCollector = (function () {
                 case ts.SyntaxKind.ClassDeclaration:
                     var classDeclaration = node;
                     if (classDeclaration.name) {
-                        var className = classDeclaration.name.text;
                         if (isExported(classDeclaration)) {
                             if (!metadata)
                                 metadata = {};

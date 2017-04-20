@@ -59,7 +59,6 @@ function errorSymbol(message, node, context, sourceFile) {
             var _a = ts.getLineAndCharacterOfPosition(sourceFile, node.getStart(sourceFile)), line = _a.line, character = _a.character;
             result = { __symbolic: 'error', message: message, line: line, character: character };
         }
-        ;
     }
     if (!result) {
         result = { __symbolic: 'error', message: message };
