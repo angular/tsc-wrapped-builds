@@ -92,6 +92,9 @@ var MockNode = (function () {
     MockNode.prototype.getText = function (sourceFile) { return ''; };
     MockNode.prototype.getFirstToken = function (sourceFile) { return null; };
     MockNode.prototype.getLastToken = function (sourceFile) { return null; };
+    MockNode.prototype.forEachChild = function (cbNode, cbNodeArray) {
+        return null;
+    };
     return MockNode;
 }());
 exports.MockNode = MockNode;

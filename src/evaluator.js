@@ -59,7 +59,6 @@ function errorSymbol(message, node, context, sourceFile) {
             var _a = ts.getLineAndCharacterOfPosition(sourceFile, node.getStart(sourceFile)), line = _a.line, character = _a.character;
             result = { __symbolic: 'error', message: message, line: line, character: character };
         }
-        ;
     }
     if (!result) {
         result = { __symbolic: 'error', message: message };
@@ -129,7 +128,8 @@ var Evaluator = (function () {
                 case ts.SyntaxKind.CallExpression:
                     var callExpression = node;
                     // We can fold a <array>.concat(<v>).
-                    if (isMethodCallOf(callExpression, 'concat') && callExpression.arguments.length === 1) {
+                    if (isMethodCallOf(callExpression, 'concat') &&
+                        arrayOrEmpty(callExpression.arguments).length === 1) {
                         var arrayNode = callExpression.expression.expression;
                         if (this.isFoldableWorker(arrayNode, folding) &&
                             this.isFoldableWorker(callExpression.arguments[0], folding)) {
@@ -141,7 +141,8 @@ var Evaluator = (function () {
                         }
                     }
                     // We can fold a call to CONST_EXPR
-                    if (isCallOf(callExpression, 'CONST_EXPR') && callExpression.arguments.length === 1)
+                    if (isCallOf(callExpression, 'CONST_EXPR') &&
+                        arrayOrEmpty(callExpression.arguments).length === 1)
                         return this.isFoldableWorker(callExpression.arguments[0], folding);
                     return false;
                 case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
@@ -267,14 +268,15 @@ var Evaluator = (function () {
                 return recordEntry({ __symbolic: 'spread', expression: spreadExpression }, node);
             case ts.SyntaxKind.CallExpression:
                 var callExpression = node;
-                if (isCallOf(callExpression, 'forwardRef') && callExpression.arguments.length === 1) {
+                if (isCallOf(callExpression, 'forwardRef') &&
+                    arrayOrEmpty(callExpression.arguments).length === 1) {
                     var firstArgument = callExpression.arguments[0];
                     if (firstArgument.kind == ts.SyntaxKind.ArrowFunction) {
                         var arrowFunction = firstArgument;
                         return recordEntry(this.evaluateNode(arrowFunction.body), node);
                     }
                 }
-                var args_1 = callExpression.arguments.map(function (arg) { return _this.evaluateNode(arg); });
+                var args_1 = arrayOrEmpty(callExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
                 if (!this.options.verboseInvalidExpression && args_1.some(schema_1.isMetadataError)) {
                     return args_1.find(schema_1.isMetadataError);
                 }
@@ -287,7 +289,8 @@ var Evaluator = (function () {
                     }
                 }
                 // Always fold a CONST_EXPR even if the argument is not foldable.
-                if (isCallOf(callExpression, 'CONST_EXPR') && callExpression.arguments.length === 1) {
+                if (isCallOf(callExpression, 'CONST_EXPR') &&
+                    arrayOrEmpty(callExpression.arguments).length === 1) {
                     return recordEntry(args_1[0], node);
                 }
                 var expression = this.evaluateNode(callExpression.expression);
@@ -301,7 +304,7 @@ var Evaluator = (function () {
                 return recordEntry(result, node);
             case ts.SyntaxKind.NewExpression:
                 var newExpression = node;
-                var newArgs = newExpression.arguments.map(function (arg) { return _this.evaluateNode(arg); });
+                var newArgs = arrayOrEmpty(newExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
                 if (!this.options.verboseInvalidExpression && newArgs.some(schema_1.isMetadataError)) {
                     return recordEntry(newArgs.find(schema_1.isMetadataError), node);
                 }
@@ -539,5 +542,9 @@ var Evaluator = (function () {
 exports.Evaluator = Evaluator;
 function isPropertyAssignment(node) {
     return node.kind == ts.SyntaxKind.PropertyAssignment;
+}
+var empty = [];
+function arrayOrEmpty(v) {
+    return v || empty;
 }
 //# sourceMappingURL=evaluator.js.map
