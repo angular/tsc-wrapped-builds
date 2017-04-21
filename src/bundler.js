@@ -11,10 +11,7 @@ var ts = require("typescript");
 var collector_1 = require("./collector");
 var schema_1 = require("./schema");
 // The character set used to produce private names.
-var PRIVATE_NAME_CHARS = [
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
-];
+var PRIVATE_NAME_CHARS = 'abcdefghijklmnopqrstuvwxyz';
 var MetadataBundler = (function () {
     function MetadataBundler(root, importAs, host) {
         this.root = root;
@@ -133,7 +130,6 @@ var MetadataBundler = (function () {
     MetadataBundler.prototype.canonicalizeSymbols = function (exportedSymbols) {
         var symbols = Array.from(this.symbolMap.values());
         this.exported = new Set(exportedSymbols);
-        ;
         symbols.forEach(this.canonicalizeSymbol, this);
     };
     MetadataBundler.prototype.canonicalizeSymbol = function (symbol) {
@@ -347,17 +343,14 @@ var MetadataBundler = (function () {
         }
         if (schema_1.isMetadataImportedSymbolReferenceExpression(value)) {
             // References to imported symbols are separated into two, references to bundled modules and
-            // references to modules
-            // external to the bundle. If the module reference is relative it is assuemd to be in the
-            // bundle. If it is Global
-            // it is assumed to be outside the bundle. References to symbols outside the bundle are left
-            // unmodified. Refernces
-            // to symbol inside the bundle need to be converted to a bundle import reference reachable
-            // from the bundle index.
+            // references to modules external to the bundle. If the module reference is relative it is
+            // assumed to be in the bundle. If it is Global it is assumed to be outside the bundle.
+            // References to symbols outside the bundle are left unmodified. References to symbol inside
+            // the bundle need to be converted to a bundle import reference reachable from the bundle
+            // index.
             if (value.module.startsWith('.')) {
                 // Reference is to a symbol defined inside the module. Convert the reference to a reference
-                // to the canonical
-                // symbol.
+                // to the canonical symbol.
                 var referencedModule = resolveModule(value.module, moduleName);
                 var referencedName = value.name;
                 return createReference(this.canonicalSymbolOf(referencedModule, referencedName));
@@ -365,7 +358,7 @@ var MetadataBundler = (function () {
             // Value is a reference to a symbol defined outside the module.
             if (value.arguments) {
                 // If a reference has arguments the arguments need to be converted.
-                var result = {
+                return {
                     __symbolic: 'reference',
                     name: value.name,
                     module: value.module,
@@ -443,9 +436,6 @@ function resolveModule(importName, from) {
 }
 function isPrimitive(o) {
     return o === null || (typeof o !== 'function' && typeof o !== 'object');
-}
-function isMetadataArray(o) {
-    return Array.isArray(o);
 }
 function getRootExport(symbol) {
     return symbol.reexportedAs ? getRootExport(symbol.reexportedAs) : symbol;

@@ -42,7 +42,7 @@ function main(project, cliOptions, codegen, options) {
         if (diagnostics_1)
             ts.performance.enable();
         var host_1 = ts.createCompilerHost(parsed_1.options, true);
-        // If the comilation is a flat module index then produce the flat module index
+        // If the compilation is a flat module index then produce the flat module index
         // metadata and the synthetic flat module index.
         if (ngOptions_1.flatModuleOutFile && !ngOptions_1.skipMetadataEmit) {
             var files = parsed_1.fileNames.filter(function (f) { return !DTS.test(f); });
@@ -146,7 +146,7 @@ exports.main = main;
 // CLI entry point
 if (require.main === module) {
     var args_1 = process.argv.slice(2);
-    var _a = ts.parseCommandLine(args_1), options = _a.options, fileNames = _a.fileNames, errors = _a.errors;
+    var _a = ts.parseCommandLine(args_1), options = _a.options, errors = _a.errors;
     tsc_1.check(errors);
     var project = options.project || '.';
     // TODO(alexeagle): command line should be TSC-compatible, remove "CliOptions" here
