@@ -35,11 +35,12 @@ exports.I18nExtractionCliOptions = I18nExtractionCliOptions;
 var NgcCliOptions = (function (_super) {
     __extends(NgcCliOptions, _super);
     function NgcCliOptions(_a) {
-        var _b = _a.i18nFormat, i18nFormat = _b === void 0 ? null : _b, _c = _a.i18nFile, i18nFile = _c === void 0 ? null : _c, _d = _a.locale, locale = _d === void 0 ? null : _d, _e = _a.basePath, basePath = _e === void 0 ? null : _e;
+        var _b = _a.i18nFormat, i18nFormat = _b === void 0 ? null : _b, _c = _a.i18nFile, i18nFile = _c === void 0 ? null : _c, _d = _a.locale, locale = _d === void 0 ? null : _d, _e = _a.missingTranslation, missingTranslation = _e === void 0 ? null : _e, _f = _a.basePath, basePath = _f === void 0 ? null : _f;
         var _this = _super.call(this, { basePath: basePath }) || this;
         _this.i18nFormat = i18nFormat;
         _this.i18nFile = i18nFile;
         _this.locale = locale;
+        _this.missingTranslation = missingTranslation;
         return _this;
     }
     return NgcCliOptions;
