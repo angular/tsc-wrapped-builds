@@ -152,6 +152,9 @@ var Evaluator = (function () {
                 case ts.SyntaxKind.NullKeyword:
                 case ts.SyntaxKind.TrueKeyword:
                 case ts.SyntaxKind.FalseKeyword:
+                case ts.SyntaxKind.TemplateHead:
+                case ts.SyntaxKind.TemplateMiddle:
+                case ts.SyntaxKind.TemplateTail:
                     return true;
                 case ts.SyntaxKind.ParenthesizedExpression:
                     var parenthesizedExpression = node;
@@ -185,6 +188,9 @@ var Evaluator = (function () {
                         return true;
                     }
                     break;
+                case ts.SyntaxKind.TemplateExpression:
+                    var templateExpression = node;
+                    return templateExpression.templateSpans.every(function (span) { return _this.isFoldableWorker(span.expression, folding); });
             }
         }
         return false;
@@ -403,8 +409,10 @@ var Evaluator = (function () {
                 }
                 return recordEntry(typeReference, node);
             case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
-                return node.text;
             case ts.SyntaxKind.StringLiteral:
+            case ts.SyntaxKind.TemplateHead:
+            case ts.SyntaxKind.TemplateTail:
+            case ts.SyntaxKind.TemplateMiddle:
                 return node.text;
             case ts.SyntaxKind.NumericLiteral:
                 return parseFloat(node.text);
@@ -538,6 +546,36 @@ var Evaluator = (function () {
             case ts.SyntaxKind.FunctionExpression:
             case ts.SyntaxKind.ArrowFunction:
                 return recordEntry(errorSymbol('Function call not supported', node), node);
+            case ts.SyntaxKind.TaggedTemplateExpression:
+                return recordEntry(errorSymbol('Tagged template expressions are not supported in metadata', node), node);
+            case ts.SyntaxKind.TemplateExpression:
+                var templateExpression = node;
+                if (this.isFoldable(node)) {
+                    return templateExpression.templateSpans.reduce(function (previous, current) { return previous + _this.evaluateNode(current.expression) +
+                        _this.evaluateNode(current.literal); }, this.evaluateNode(templateExpression.head));
+                }
+                else {
+                    return templateExpression.templateSpans.reduce(function (previous, current) {
+                        var expr = _this.evaluateNode(current.expression);
+                        var literal = _this.evaluateNode(current.literal);
+                        if (isFoldableError(expr))
+                            return expr;
+                        if (isFoldableError(literal))
+                            return literal;
+                        if (typeof previous === 'string' && typeof expr === 'string' &&
+                            typeof literal === 'string') {
+                            return previous + expr + literal;
+                        }
+                        var result = expr;
+                        if (previous !== '') {
+                            result = { __symbolic: 'binop', operator: '+', left: previous, right: expr };
+                        }
+                        if (literal != '') {
+                            result = { __symbolic: 'binop', operator: '+', left: result, right: literal };
+                        }
+                        return result;
+                    }, this.evaluateNode(templateExpression.head));
+                }
         }
         return recordEntry(errorSymbol('Expression form not supported', node), node);
     };
