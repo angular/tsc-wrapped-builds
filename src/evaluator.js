@@ -204,6 +204,14 @@ var Evaluator = (function () {
         function isFoldableError(value) {
             return !t.options.verboseInvalidExpression && schema_1.isMetadataError(value);
         }
+        var resolveName = function (name) {
+            var reference = _this.symbols.resolve(name);
+            if (reference === undefined) {
+                // Encode as a global reference. StaticReflector will check the reference.
+                return recordEntry({ __symbolic: 'reference', name: name }, node);
+            }
+            return reference;
+        };
         switch (node.kind) {
             case ts.SyntaxKind.ObjectLiteralExpression:
                 var obj_1 = {};
@@ -224,7 +232,7 @@ var Evaluator = (function () {
                             }
                             var propertyValue = isPropertyAssignment(assignment) ?
                                 _this.evaluateNode(assignment.initializer) :
-                                { __symbolic: 'reference', name: propertyName };
+                                resolveName(propertyName);
                             if (isFoldableError(propertyValue)) {
                                 error = propertyValue;
                                 return true; // Stop the forEachChild.
@@ -355,12 +363,7 @@ var Evaluator = (function () {
             case ts.SyntaxKind.Identifier:
                 var identifier = node;
                 var name_3 = identifier.text;
-                var reference = this.symbols.resolve(name_3);
-                if (reference === undefined) {
-                    // Encode as a global reference. StaticReflector will check the reference.
-                    return recordEntry({ __symbolic: 'reference', name: name_3 }, node);
-                }
-                return reference;
+                return resolveName(name_3);
             case ts.SyntaxKind.TypeReference:
                 var typeReferenceNode = node;
                 var typeNameNode_1 = typeReferenceNode.typeName;

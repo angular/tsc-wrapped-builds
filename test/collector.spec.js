@@ -655,6 +655,13 @@ describe('Collector', function () {
                 expect(nine.arity).toBe(9);
         });
     });
+    describe('regerssion', function () {
+        it('should be able to collect a short-hand property value', function () {
+            var source = ts.createSourceFile('', "\n        const children = { f1: 1 };\n        export const r = [\n          {path: ':locale', children}\n        ];\n      ", ts.ScriptTarget.Latest, true);
+            var metadata = collector.getMetadata(source);
+            expect(metadata.metadata).toEqual({ r: [{ path: ':locale', children: { f1: 1 } }] });
+        });
+    });
     function override(fileName, content) {
         host.overrideFile(fileName, content);
         host.addFile(fileName);
