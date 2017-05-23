@@ -408,6 +408,36 @@ var Evaluator = (function () {
                     typeReference.arguments = args_2;
                 }
                 return recordEntry(typeReference, node);
+            case ts.SyntaxKind.UnionType:
+                var unionType = node;
+                // Remove null and undefined from the list of unions.
+                var references = unionType.types
+                    .filter(function (n) { return n.kind != ts.SyntaxKind.NullKeyword &&
+                    n.kind != ts.SyntaxKind.UndefinedKeyword; })
+                    .map(function (n) { return _this.evaluateNode(n); });
+                // The remmaining reference must be the same. If two have type arguments consider them
+                // different even if the type arguments are the same.
+                var candidate = null;
+                for (var i = 0; i < references.length; i++) {
+                    var reference = references[i];
+                    if (schema_1.isMetadataSymbolicReferenceExpression(reference)) {
+                        if (candidate) {
+                            if (reference.name == candidate.name &&
+                                reference.module == candidate.module && !reference.arguments) {
+                                candidate = reference;
+                            }
+                        }
+                        else {
+                            candidate = reference;
+                        }
+                    }
+                    else {
+                        return reference;
+                    }
+                }
+                if (candidate)
+                    return candidate;
+                break;
             case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
             case ts.SyntaxKind.StringLiteral:
             case ts.SyntaxKind.TemplateHead:
