@@ -119,10 +119,15 @@ var Tsc = (function () {
         if (readDirectory === void 0) { readDirectory = ts.sys.readDirectory; }
         this.readFile = readFile;
         this.readDirectory = readDirectory;
+        this.parseConfigHost = {
+            useCaseSensitiveFileNames: true,
+            fileExists: fs_1.existsSync,
+            readDirectory: this.readDirectory,
+            readFile: ts.sys.readFile
+        };
     }
     Tsc.prototype.readConfiguration = function (project, basePath, existingOptions) {
         var _this = this;
-        this.basePath = basePath;
         // Allow a directory containing tsconfig.json as the project value
         // Note, TS@next returns an empty array, while earlier versions throw
         try {
@@ -143,29 +148,18 @@ var Tsc = (function () {
             }
         })(), config = _a.config, error = _a.error;
         check([error]);
-        // Do not inline `host` into `parseJsonConfigFileContent` until after
-        // g3 is updated to the latest TypeScript.
-        // The issue is that old typescript only has `readDirectory` while
-        // the newer TypeScript has additional `useCaseSensitiveFileNames` and
-        // `fileExists`. Inlining will trigger an error of extra parameters.
-        var host = {
-            useCaseSensitiveFileNames: true,
-            fileExists: fs_1.existsSync,
-            readDirectory: this.readDirectory,
-            readFile: ts.sys.readFile
-        };
-        this.parsed = ts.parseJsonConfigFileContent(config, host, basePath, existingOptions);
-        check(this.parsed.errors);
+        var parsed = ts.parseJsonConfigFileContent(config, this.parseConfigHost, basePath, existingOptions);
+        check(parsed.errors);
         // Default codegen goes to the current directory
         // Parsed options are already converted to absolute paths
-        this.ngOptions = config.angularCompilerOptions || {};
-        this.ngOptions.genDir = path.join(basePath, this.ngOptions.genDir || '.');
-        for (var _i = 0, _b = Object.keys(this.parsed.options); _i < _b.length; _i++) {
+        var ngOptions = config.angularCompilerOptions || {};
+        ngOptions.genDir = path.join(basePath, ngOptions.genDir || '.');
+        for (var _i = 0, _b = Object.keys(parsed.options); _i < _b.length; _i++) {
             var key = _b[_i];
-            this.ngOptions[key] = this.parsed.options[key];
+            ngOptions[key] = parsed.options[key];
         }
-        check(validateAngularCompilerOptions(this.ngOptions));
-        return { parsed: this.parsed, ngOptions: this.ngOptions };
+        check(validateAngularCompilerOptions(ngOptions));
+        return { parsed: parsed, ngOptions: ngOptions };
     };
     Tsc.prototype.typeCheck = function (compilerHost, program) {
         debug('Checking global diagnostics...');

@@ -11,16 +11,17 @@ var fs = require("fs");
 var path = require("path");
 var tsickle = require("tsickle");
 var ts = require("typescript");
-var tsc_1 = require("./tsc");
-var compiler_host_1 = require("./compiler_host");
-var cli_options_1 = require("./cli_options");
-var vinyl_file_1 = require("./vinyl_file");
 var bundler_1 = require("./bundler");
+var cli_options_1 = require("./cli_options");
+var compiler_host_1 = require("./compiler_host");
 var index_writer_1 = require("./index_writer");
+var tsc_1 = require("./tsc");
+var vinyl_file_1 = require("./vinyl_file");
 var tsc_2 = require("./tsc");
 exports.UserError = tsc_2.UserError;
 var DTS = /\.d\.ts$/;
 var JS_EXT = /(\.js|)$/;
+var TS_EXT = /\.ts$/;
 function main(project, cliOptions, codegen, options) {
     try {
         var projectDir = project;
@@ -32,12 +33,18 @@ function main(project, cliOptions, codegen, options) {
             projectDir = path.dirname(project);
         }
         // file names in tsconfig are resolved relative to this absolute path
-        var basePath = path.resolve(process.cwd(), cliOptions.basePath || projectDir);
+        var basePath_1 = path.resolve(process.cwd(), cliOptions.basePath || projectDir);
         // read the configuration options from wherever you store them
-        var _a = tsc_1.tsc.readConfiguration(project, basePath, options), parsed_1 = _a.parsed, ngOptions_1 = _a.ngOptions;
-        ngOptions_1.basePath = basePath;
+        var _a = tsc_1.tsc.readConfiguration(project, basePath_1, options), parsed_1 = _a.parsed, ngOptions_1 = _a.ngOptions;
+        ngOptions_1.basePath = basePath_1;
+        var rootFileNames_1 = parsed_1.fileNames.slice(0);
         var createProgram_1 = function (host, oldProgram) {
-            return ts.createProgram(parsed_1.fileNames, parsed_1.options, host, oldProgram);
+            return ts.createProgram(rootFileNames_1.slice(0), parsed_1.options, host, oldProgram);
+        };
+        var addGeneratedFileName_1 = function (genFileName) {
+            if (genFileName.startsWith(basePath_1) && TS_EXT.exec(genFileName)) {
+                rootFileNames_1.push(genFileName);
+            }
         };
         var diagnostics_1 = parsed_1.options.diagnostics;
         if (diagnostics_1)
@@ -70,7 +77,7 @@ function main(project, cliOptions, codegen, options) {
             var libraryIndex = "./" + path.basename(indexModule);
             var content = index_writer_1.privateEntriesToIndex(libraryIndex, metadataBundle.privates);
             host_1 = new compiler_host_1.SyntheticIndexHost(host_1, { name: name_1, content: content, metadata: metadata });
-            parsed_1.fileNames.push(name_1);
+            addGeneratedFileName_1(name_1);
         }
         var tsickleCompilerHostOptions = {
             googmodule: false,
@@ -88,13 +95,15 @@ function main(project, cliOptions, codegen, options) {
         var errors = program_1.getOptionsDiagnostics();
         tsc_1.check(errors);
         if (ngOptions_1.skipTemplateCodegen || !codegen) {
-            codegen = function () { return Promise.resolve(null); };
+            codegen = function () { return Promise.resolve([]); };
         }
         if (diagnostics_1)
             console.time('NG codegen');
-        return codegen(ngOptions_1, cliOptions, program_1, host_1).then(function () {
+        return codegen(ngOptions_1, cliOptions, program_1, host_1).then(function (genFiles) {
             if (diagnostics_1)
                 console.timeEnd('NG codegen');
+            // Add the generated files to the configuration so they will become part of the program.
+            genFiles.forEach(function (genFileName) { return addGeneratedFileName_1(genFileName); });
             var definitionsHost = tsickleCompilerHost_1;
             if (!ngOptions_1.skipMetadataEmit) {
                 // if tsickle is not not used for emitting, but we do use the MetadataWriterHost,
