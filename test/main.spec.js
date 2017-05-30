@@ -185,5 +185,25 @@ describe('tsc-wrapped', function () {
         })
             .catch(function (e) { return done.fail(e); });
     });
+    it('should expand shorthand imports for ES2015 modules', function (done) {
+        write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": true,\n        \"moduleResolution\": \"node\",\n        \"target\": \"es2015\",\n        \"module\": \"es2015\"\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
+        main_1.main(basePath, { basePath: basePath })
+            .then(function () {
+            var fileOutput = readOut('js');
+            expect(fileOutput).toContain("export { A, B } from './dep/index'");
+            done();
+        })
+            .catch(function (e) { return done.fail(e); });
+    });
+    it('should expand shorthand imports for ES5 CommonJS modules', function (done) {
+        write('tsconfig.json', "{\n      \"compilerOptions\": {\n        \"experimentalDecorators\": true,\n        \"types\": [],\n        \"outDir\": \"built\",\n        \"declaration\": true,\n        \"moduleResolution\": \"node\",\n        \"target\": \"es5\",\n        \"module\": \"commonjs\"\n      },\n      \"angularCompilerOptions\": {\n        \"annotateForClosureCompiler\": true\n      },\n      \"files\": [\"test.ts\"]\n    }");
+        main_1.main(basePath, { basePath: basePath })
+            .then(function () {
+            var fileOutput = readOut('js');
+            expect(fileOutput).toContain("var index_1 = require(\"./dep/index\");");
+            done();
+        })
+            .catch(function (e) { return done.fail(e); });
+    });
 });
 //# sourceMappingURL=main.spec.js.map

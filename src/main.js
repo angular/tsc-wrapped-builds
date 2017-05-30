@@ -79,11 +79,7 @@ function main(project, cliOptions, codegen, options) {
             host_1 = new compiler_host_1.SyntheticIndexHost(host_1, { name: name_1, content: content, metadata: metadata });
             addGeneratedFileName_1(name_1);
         }
-        var tsickleCompilerHostOptions = {
-            googmodule: false,
-            untyped: true,
-            convertIndexImportShorthand: ngOptions_1.target === ts.ScriptTarget.ES2015,
-        };
+        var tsickleCompilerHostOptions = { googmodule: false, untyped: true, convertIndexImportShorthand: true };
         var tsickleHost = {
             shouldSkipTsickleProcessing: function (fileName) { return /\.d\.ts$/.test(fileName); },
             pathToModuleName: function (context, importPath) { return ''; },
