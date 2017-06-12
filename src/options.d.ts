@@ -22,6 +22,5 @@ interface Options extends ts.CompilerOptions {
     debug?: boolean;
     enableLegacyTemplate?: boolean;
     enableSummariesForJit?: boolean;
-    alwaysCompileGeneratedCode?: boolean;
 }
 export default Options;
