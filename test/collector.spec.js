@@ -575,9 +575,6 @@ describe('Collector', function () {
         });
     });
     describe('with interpolations', function () {
-        function createSource(text) {
-            return ts.createSourceFile('', text, ts.ScriptTarget.Latest, true);
-        }
         function e(expr, prefix) {
             var source = createSource((prefix || '') + " export let value = " + expr + ";");
             var metadata = collector.getMetadata(source);
@@ -736,9 +733,20 @@ describe('Collector', function () {
     });
     describe('regerssion', function () {
         it('should be able to collect a short-hand property value', function () {
-            var source = ts.createSourceFile('', "\n        const children = { f1: 1 };\n        export const r = [\n          {path: ':locale', children}\n        ];\n      ", ts.ScriptTarget.Latest, true);
+            var source = createSource("\n        const children = { f1: 1 };\n        export const r = [\n          {path: ':locale', children}\n        ];\n      ");
             var metadata = collector.getMetadata(source);
             expect(metadata.metadata).toEqual({ r: [{ path: ':locale', children: { f1: 1 } }] });
+        });
+        // #17518
+        it('should skip a default function', function () {
+            var source = createSource("\n        export default function () {\n\n          const mainRoutes = [\n            {name: 'a', abstract: true, component: 'main'},\n\n            {name: 'a.welcome', url: '/welcome', component: 'welcome'}\n          ];\n\n          return mainRoutes;\n\n        }");
+            var metadata = collector.getMetadata(source);
+            expect(metadata).toBeUndefined();
+        });
+        it('should skip a named default export', function () {
+            var source = createSource("\n        function mainRoutes() {\n\n          const mainRoutes = [\n            {name: 'a', abstract: true, component: 'main'},\n\n            {name: 'a.welcome', url: '/welcome', component: 'welcome'}\n          ];\n\n          return mainRoutes;\n\n        }\n\n        exports = foo;\n        ");
+            var metadata = collector.getMetadata(source);
+            expect(metadata).toBeUndefined();
         });
     });
     function override(fileName, content) {
@@ -801,4 +809,7 @@ var FILES = {
         }
     }
 };
+function createSource(text) {
+    return ts.createSourceFile('', text, ts.ScriptTarget.Latest, true);
+}
 //# sourceMappingURL=collector.spec.js.map
