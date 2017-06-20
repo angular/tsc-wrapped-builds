@@ -337,7 +337,7 @@ var MetadataCollector = (function () {
                     // Record functions that return a single value. Record the parameter
                     // names substitution will be performed by the StaticReflector.
                     var functionDeclaration = node;
-                    if (isExported(functionDeclaration)) {
+                    if (isExported(functionDeclaration) && functionDeclaration.name) {
                         if (!metadata)
                             metadata = {};
                         var name_4 = exportedName(functionDeclaration);
