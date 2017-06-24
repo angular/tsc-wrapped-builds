@@ -14,6 +14,7 @@ var compiler_host_1 = require("./src/compiler_host");
 exports.MetadataWriterHost = compiler_host_1.MetadataWriterHost;
 var main_1 = require("./src/main");
 exports.UserError = main_1.UserError;
+exports.createBundleIndexHost = main_1.createBundleIndexHost;
 exports.main = main_1.main;
 __export(require("./src/bundler"));
 __export(require("./src/cli_options"));
