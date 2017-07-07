@@ -103,6 +103,24 @@ describe('metadata bundler', function () {
         expect(Object.keys(result.metadata.metadata).sort()).toEqual(['Foo', 'ɵa']);
         expect(result.privates).toEqual([{ privateName: 'ɵa', name: 'Bar', module: './bar' }]);
     });
+    it('should be able to bundle a library with re-exported symbols', function () {
+        var host = new MockStringBundlerHost('/', {
+            'public-api.ts': "\n        export * from './src/core';\n        export * from './src/externals';\n      ",
+            'src': {
+                'core.ts': "\n          export class A {}\n          export class B extends A {}\n        ",
+                'externals.ts': "\n          export {E, F, G} from 'external_one';\n          export * from 'external_two';\n        "
+            }
+        });
+        var bundler = new bundler_1.MetadataBundler('/public-api', undefined, host);
+        var result = bundler.getMetadataBundle();
+        expect(result.metadata.exports).toEqual([
+            { from: 'external_two' }, {
+                export: [{ name: 'E', as: 'E' }, { name: 'F', as: 'F' }, { name: 'G', as: 'G' }],
+                from: 'external_one'
+            }
+        ]);
+        expect(result.metadata.origins['E']).toBeUndefined();
+    });
 });
 var MockStringBundlerHost = (function () {
     function MockStringBundlerHost(dirName, directory) {
