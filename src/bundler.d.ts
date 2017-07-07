@@ -37,7 +37,6 @@ export declare class MetadataBundler {
     private canonicalizeSymbols(exportedSymbols);
     private canonicalizeSymbol(symbol);
     private getEntries(exportedSymbols);
-    private getReExports(exportedSymbols);
     private convertSymbol(symbol);
     private convertEntry(moduleName, value);
     private convertClass(moduleName, value);
