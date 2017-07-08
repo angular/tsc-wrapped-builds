@@ -345,7 +345,7 @@ var Evaluator = (function () {
                 if (expression_1 && this.isFoldable(propertyAccessExpression.expression))
                     return expression_1[member];
                 if (schema_1.isMetadataModuleReferenceExpression(expression_1)) {
-                    // A select into a module refrence and be converted into a reference to the symbol
+                    // A select into a module reference and be converted into a reference to the symbol
                     // in the module
                     return recordEntry({ __symbolic: 'reference', module: expression_1.module, name: member }, node);
                 }
