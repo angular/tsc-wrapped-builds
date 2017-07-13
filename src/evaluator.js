@@ -609,6 +609,11 @@ var Evaluator = (function () {
                         return result;
                     }, this.evaluateNode(templateExpression.head));
                 }
+            case ts.SyntaxKind.AsExpression:
+                var asExpression = node;
+                return this.evaluateNode(asExpression.expression);
+            case ts.SyntaxKind.ClassExpression:
+                return { __symbolic: 'class' };
         }
         return recordEntry(errorSymbol('Expression form not supported', node), node);
     };

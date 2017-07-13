@@ -6,6 +6,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var ts = require("typescript");
 var collector_1 = require("../src/collector");
@@ -649,6 +650,11 @@ describe('Collector', function () {
                     ]
                 }]
         });
+    });
+    it('should treat exported class expressions as a class', function () {
+        var source = ts.createSourceFile('', "\n    export const InjectionToken: {new<T>(desc: string): InjectionToken<T>;} = class extends OpaqueToken {\n      constructor(desc: string) {\n        super(desc);\n      }\n\n      toString(): string { return `InjectionToken " + _this._desc + "`; }\n    } as any;", ts.ScriptTarget.Latest, true);
+        var metadata = collector.getMetadata(source);
+        expect(metadata.metadata).toEqual({ InjectionToken: { __symbolic: 'class' } });
     });
     describe('in strict mode', function () {
         it('should throw if an error symbol is collecting a reference to a non-exported symbol', function () {
