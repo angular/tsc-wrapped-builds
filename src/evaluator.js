@@ -357,6 +357,9 @@ var Evaluator = (function () {
                 if (isFoldableError(expression_2)) {
                     return recordEntry(expression_2, node);
                 }
+                if (!elementAccessExpression.argumentExpression) {
+                    return recordEntry(errorSymbol('Expression form not supported', node), node);
+                }
                 var index = this.evaluateNode(elementAccessExpression.argumentExpression);
                 if (isFoldableError(expression_2)) {
                     return recordEntry(expression_2, node);
