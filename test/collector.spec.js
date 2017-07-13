@@ -577,8 +577,7 @@ describe('Collector', function () {
     });
     describe('with interpolations', function () {
         function e(expr, prefix) {
-            var source = createSource((prefix || '') + " export let value = " + expr + ";");
-            var metadata = collector.getMetadata(source);
+            var metadata = collectSource((prefix || '') + " export let value = " + expr + ";");
             return expect(metadata.metadata['value']);
         }
         it('should be able to collect a raw interpolated string', function () { e('`simple value`').toBe('simple value'); });
@@ -636,8 +635,7 @@ describe('Collector', function () {
         });
     });
     it('should ignore |null or |undefined in type expressions', function () {
-        var source = ts.createSourceFile('somefile.ts', "\n      import {Foo} from './foo';\n      export class SomeClass {\n        constructor (a: Foo, b: Foo | null, c: Foo | undefined, d: Foo | undefined | null, e: Foo | undefined | null | Foo) {}\n      }\n    ", ts.ScriptTarget.Latest, true);
-        var metadata = collector.getMetadata(source);
+        var metadata = collectSource("\n      import {Foo} from './foo';\n      export class SomeClass {\n        constructor (a: Foo, b: Foo | null, c: Foo | undefined, d: Foo | undefined | null, e: Foo | undefined | null | Foo) {}\n      }\n    ");
         expect(metadata.metadata['SomeClass'].members).toEqual({
             __ctor__: [{
                     __symbolic: 'constructor',
@@ -739,19 +737,16 @@ describe('Collector', function () {
     });
     describe('regerssion', function () {
         it('should be able to collect a short-hand property value', function () {
-            var source = createSource("\n        const children = { f1: 1 };\n        export const r = [\n          {path: ':locale', children}\n        ];\n      ");
-            var metadata = collector.getMetadata(source);
+            var metadata = collectSource("\n        const children = { f1: 1 };\n        export const r = [\n          {path: ':locale', children}\n        ];\n      ");
             expect(metadata.metadata).toEqual({ r: [{ path: ':locale', children: { f1: 1 } }] });
         });
         // #17518
         it('should skip a default function', function () {
-            var source = createSource("\n        export default function () {\n\n          const mainRoutes = [\n            {name: 'a', abstract: true, component: 'main'},\n\n            {name: 'a.welcome', url: '/welcome', component: 'welcome'}\n          ];\n\n          return mainRoutes;\n\n        }");
-            var metadata = collector.getMetadata(source);
+            var metadata = collectSource("\n        export default function () {\n\n          const mainRoutes = [\n            {name: 'a', abstract: true, component: 'main'},\n\n            {name: 'a.welcome', url: '/welcome', component: 'welcome'}\n          ];\n\n          return mainRoutes;\n\n        }");
             expect(metadata).toBeUndefined();
         });
         it('should skip a named default export', function () {
-            var source = createSource("\n        function mainRoutes() {\n\n          const mainRoutes = [\n            {name: 'a', abstract: true, component: 'main'},\n\n            {name: 'a.welcome', url: '/welcome', component: 'welcome'}\n          ];\n\n          return mainRoutes;\n\n        }\n\n        exports = foo;\n        ");
-            var metadata = collector.getMetadata(source);
+            var metadata = collectSource("\n        function mainRoutes() {\n\n          const mainRoutes = [\n            {name: 'a', abstract: true, component: 'main'},\n\n            {name: 'a.welcome', url: '/welcome', component: 'welcome'}\n          ];\n\n          return mainRoutes;\n\n        }\n\n        exports = foo;\n        ");
             expect(metadata).toBeUndefined();
         });
         it('should be able to collect an invalid access expression', function () {
@@ -768,10 +763,36 @@ describe('Collector', function () {
             });
         });
     });
+    describe('references', function () {
+        beforeEach(function () { collector = new collector_1.MetadataCollector({ quotedNames: true }); });
+        it('should record a reference to an exported field of a useValue', function () {
+            var metadata = collectSource("\n        export var someValue = 1;\n        export const v = {\n          useValue: someValue\n        };\n      ");
+            expect(metadata.metadata['someValue']).toEqual(1);
+            expect(metadata.metadata['v']).toEqual({
+                useValue: { __symbolic: 'reference', name: 'someValue' }
+            });
+        });
+        it('should leave external references in place in an object literal', function () {
+            var metadata = collectSource("\n        export const myLambda = () => [1, 2, 3];\n        const indirect = [{a: 1, b: 3: c: myLambda}];\n        export const v = {\n          v: {i: indirect}\n        }\n      ");
+            expect(metadata.metadata['v']).toEqual({
+                v: { i: [{ a: 1, b: 3, c: { __symbolic: 'reference', name: 'myLambda' } }] }
+            });
+        });
+        it('should leave an external reference in place in an array literal', function () {
+            var metadata = collectSource("\n        export const myLambda = () => [1, 2, 3];\n        const indirect = [1, 3, myLambda}];\n        export const v = {\n          v: {i: indirect}\n        }\n      ");
+            expect(metadata.metadata['v']).toEqual({
+                v: { i: [1, 3, { __symbolic: 'reference', name: 'myLambda' }] }
+            });
+        });
+    });
     function override(fileName, content) {
         host.overrideFile(fileName, content);
         host.addFile(fileName);
         program = service.getProgram();
+    }
+    function collectSource(content) {
+        var sourceFile = createSource(content);
+        return collector.getMetadata(sourceFile);
     }
 });
 // TODO: Do not use \` in a template literal as it confuses clang-format

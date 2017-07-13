@@ -417,6 +417,9 @@ var MetadataCollector = (function () {
                             if (typeof varValue == 'string' || typeof varValue == 'number' ||
                                 typeof varValue == 'boolean') {
                                 locals.define(nameNode.text, varValue);
+                                if (exported) {
+                                    locals.defineReference(nameNode.text, { __symbolic: 'reference', name: nameNode.text });
+                                }
                             }
                             else if (!exported) {
                                 if (varValue && !schema_1.isMetadataError(varValue)) {

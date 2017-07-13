@@ -11,9 +11,15 @@ var ts = require("typescript");
 var Symbols = (function () {
     function Symbols(sourceFile) {
         this.sourceFile = sourceFile;
+        this.references = new Map();
     }
-    Symbols.prototype.resolve = function (name) { return this.symbols.get(name); };
+    Symbols.prototype.resolve = function (name, preferReference) {
+        return (preferReference && this.references.get(name)) || this.symbols.get(name);
+    };
     Symbols.prototype.define = function (name, value) { this.symbols.set(name, value); };
+    Symbols.prototype.defineReference = function (name, value) {
+        this.references.set(name, value);
+    };
     Symbols.prototype.has = function (name) { return this.symbols.has(name); };
     Object.defineProperty(Symbols.prototype, "symbols", {
         get: function () {

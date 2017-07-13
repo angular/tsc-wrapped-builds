@@ -199,7 +199,7 @@ var Evaluator = (function () {
      * Produce a JSON serialiable object representing `node`. The foldable values in the expression
      * tree are folded. For example, a node representing `1 + 2` is folded into `3`.
      */
-    Evaluator.prototype.evaluateNode = function (node) {
+    Evaluator.prototype.evaluateNode = function (node, preferReference) {
         var _this = this;
         var t = this;
         var error;
@@ -210,8 +210,8 @@ var Evaluator = (function () {
         function isFoldableError(value) {
             return !t.options.verboseInvalidExpression && schema_1.isMetadataError(value);
         }
-        var resolveName = function (name) {
-            var reference = _this.symbols.resolve(name);
+        var resolveName = function (name, preferReference) {
+            var reference = _this.symbols.resolve(name, preferReference);
             if (reference === undefined) {
                 // Encode as a global reference. StaticReflector will check the reference.
                 return recordEntry({ __symbolic: 'reference', name: name }, node);
@@ -237,8 +237,8 @@ var Evaluator = (function () {
                                 return true;
                             }
                             var propertyValue = isPropertyAssignment(assignment) ?
-                                _this.evaluateNode(assignment.initializer) :
-                                resolveName(propertyName);
+                                _this.evaluateNode(assignment.initializer, /* preferReference */ true) :
+                                resolveName(propertyName, /* preferReference */ true);
                             if (isFoldableError(propertyValue)) {
                                 error = propertyValue;
                                 return true; // Stop the forEachChild.
@@ -257,7 +257,7 @@ var Evaluator = (function () {
             case ts.SyntaxKind.ArrayLiteralExpression:
                 var arr_1 = [];
                 ts.forEachChild(node, function (child) {
-                    var value = _this.evaluateNode(child);
+                    var value = _this.evaluateNode(child, /* preferReference */ true);
                     // Check for error
                     if (isFoldableError(value)) {
                         error = value;
@@ -372,7 +372,7 @@ var Evaluator = (function () {
             case ts.SyntaxKind.Identifier:
                 var identifier = node;
                 var name_3 = identifier.text;
-                return resolveName(name_3);
+                return resolveName(name_3, preferReference);
             case ts.SyntaxKind.TypeReference:
                 var typeReferenceNode = node;
                 var typeNameNode_1 = typeReferenceNode.typeName;
