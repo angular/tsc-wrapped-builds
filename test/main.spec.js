@@ -164,7 +164,7 @@ describe('tsc-wrapped', function () {
         main_1.main(basePath, { basePath: basePath })
             .then(function () {
             var out = readOut('js.map');
-            expect(out).toContain('"sources":["other_test.ts"]');
+            expect(out).toContain('"sources":["other_test.ts","../test.ts"]');
             done();
         })
             .catch(function (e) { return done.fail(e); });
@@ -180,7 +180,7 @@ describe('tsc-wrapped', function () {
         main_1.main(basePath, { basePath: basePath })
             .then(function () {
             var out = readOut('js.map');
-            expect(out).toContain('"sources":["other_test.ts"]');
+            expect(out).toContain('"sources":["other_test.ts","../test.ts"]');
             done();
         })
             .catch(function (e) { return done.fail(e); });
