@@ -203,6 +203,7 @@ var MetadataBundler = (function () {
         for (var _i = 0, exportedSymbols_3 = exportedSymbols; _i < exportedSymbols_3.length; _i++) {
             var symbol = exportedSymbols_3[_i];
             if (symbol.reexport) {
+                // symbol.declaration is guarenteed to be defined during the phase this method is called.
                 var declaration = symbol.declaration;
                 var module_1 = declaration.module;
                 if (declaration.name == '*') {
@@ -228,9 +229,11 @@ var MetadataBundler = (function () {
         }));
     };
     MetadataBundler.prototype.convertSymbol = function (symbol) {
+        // canonicalSymbol is ensured to be defined before this is called.
         var canonicalSymbol = symbol.canonicalSymbol;
         if (!canonicalSymbol.referenced) {
             canonicalSymbol.referenced = true;
+            // declaration is ensured to be definded before this method is called.
             var declaration = canonicalSymbol.declaration;
             var module_2 = this.getMetadata(declaration.module);
             if (module_2) {

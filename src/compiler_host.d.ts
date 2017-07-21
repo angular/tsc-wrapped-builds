@@ -8,7 +8,7 @@ export declare function formatDiagnostics(d: ts.Diagnostic[]): string;
 export declare abstract class DelegatingHost implements ts.CompilerHost {
     protected delegate: ts.CompilerHost;
     constructor(delegate: ts.CompilerHost);
-    getSourceFile: (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void) => ts.SourceFile;
+    getSourceFile: (fileName: string, languageVersion: ts.ScriptTarget, onError?: ((message: string) => void) | undefined) => ts.SourceFile;
     getCancellationToken: () => ts.CancellationToken;
     getDefaultLibFileName: (options: ts.CompilerOptions) => string;
     getDefaultLibLocation: () => string;
@@ -43,6 +43,6 @@ export declare class SyntheticIndexHost extends DelegatingHost {
     });
     fileExists: (fileName: string) => boolean;
     readFile: (fileName: string) => string;
-    getSourceFile: (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void) => ts.SourceFile;
+    getSourceFile: (fileName: string, languageVersion: ts.ScriptTarget, onError?: ((message: string) => void) | undefined) => ts.SourceFile;
     writeFile: ts.WriteFileCallback;
 }

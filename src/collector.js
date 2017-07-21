@@ -50,7 +50,7 @@ var MetadataCollector = (function () {
         var nodeMap = new Map();
         var evaluator = new evaluator_1.Evaluator(locals, nodeMap, this.options);
         var metadata;
-        var exports;
+        var exports = undefined;
         function objFromDecorator(decoratorNode) {
             return evaluator.evaluateNode(decoratorNode.expression);
         }
@@ -62,7 +62,7 @@ var MetadataCollector = (function () {
             return evaluator_1.errorSymbol(message, node, context, sourceFile);
         }
         function maybeGetSimpleFunction(functionDeclaration) {
-            if (functionDeclaration.name.kind == ts.SyntaxKind.Identifier) {
+            if (functionDeclaration.name && functionDeclaration.name.kind == ts.SyntaxKind.Identifier) {
                 var nameNode = functionDeclaration.name;
                 var functionName = nameNode.text;
                 var functionBody = functionDeclaration.body;
@@ -228,6 +228,7 @@ var MetadataCollector = (function () {
                     var exportDeclaration = node;
                     var moduleSpecifier = exportDeclaration.moduleSpecifier, exportClause = exportDeclaration.exportClause;
                     if (!moduleSpecifier) {
+                        // If there is a module specifier there is also an exportClause
                         exportClause.elements.forEach(function (spec) {
                             var exportedAs = spec.name.text;
                             var name = (spec.propertyName || spec.name).text;
@@ -236,10 +237,12 @@ var MetadataCollector = (function () {
                     }
             }
         });
-        var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
+        var isExportedIdentifier = function (identifier) {
+            return identifier && exportMap.has(identifier.text);
+        };
         var isExported = function (node) { return isExport(node) || isExportedIdentifier(node.name); };
         var exportedIdentifierName = function (identifier) {
-            return exportMap.get(identifier.text) || identifier.text;
+            return identifier && (exportMap.get(identifier.text) || identifier.text);
         };
         var exportedName = function (node) { return exportedIdentifierName(node.name); };
         // Predeclare classes and functions
@@ -318,9 +321,12 @@ var MetadataCollector = (function () {
                     var classDeclaration = node;
                     if (classDeclaration.name) {
                         if (isExported(classDeclaration)) {
-                            if (!metadata)
-                                metadata = {};
-                            metadata[exportedName(classDeclaration)] = classMetadataOf(classDeclaration);
+                            var name_4 = exportedName(classDeclaration);
+                            if (name_4) {
+                                if (!metadata)
+                                    metadata = {};
+                                metadata[name_4] = classMetadataOf(classDeclaration);
+                            }
                         }
                     }
                     // Otherwise don't record metadata for the class.
@@ -328,9 +334,12 @@ var MetadataCollector = (function () {
                 case ts.SyntaxKind.InterfaceDeclaration:
                     var interfaceDeclaration = node;
                     if (interfaceDeclaration.name && isExported(interfaceDeclaration)) {
-                        if (!metadata)
-                            metadata = {};
-                        metadata[exportedName(interfaceDeclaration)] = { __symbolic: 'interface' };
+                        var name_5 = exportedName(interfaceDeclaration);
+                        if (name_5) {
+                            if (!metadata)
+                                metadata = {};
+                            metadata[name_5] = { __symbolic: 'interface' };
+                        }
                     }
                     break;
                 case ts.SyntaxKind.FunctionDeclaration:
@@ -338,12 +347,14 @@ var MetadataCollector = (function () {
                     // names substitution will be performed by the StaticReflector.
                     var functionDeclaration = node;
                     if (isExported(functionDeclaration) && functionDeclaration.name) {
-                        if (!metadata)
-                            metadata = {};
-                        var name_4 = exportedName(functionDeclaration);
+                        var name_6 = exportedName(functionDeclaration);
                         var maybeFunc = maybeGetSimpleFunction(functionDeclaration);
-                        metadata[name_4] =
-                            maybeFunc ? recordEntry(maybeFunc.func, node) : { __symbolic: 'function' };
+                        if (name_6) {
+                            if (!metadata)
+                                metadata = {};
+                            metadata[name_6] =
+                                maybeFunc ? recordEntry(maybeFunc.func, node) : { __symbolic: 'function' };
+                        }
                     }
                     break;
                 case ts.SyntaxKind.EnumDeclaration:
@@ -362,23 +373,23 @@ var MetadataCollector = (function () {
                             else {
                                 enumValue = evaluator.evaluateNode(member.initializer);
                             }
-                            var name_5 = undefined;
+                            var name_7 = undefined;
                             if (member.name.kind == ts.SyntaxKind.Identifier) {
                                 var identifier = member.name;
-                                name_5 = identifier.text;
-                                enumValueHolder[name_5] = enumValue;
+                                name_7 = identifier.text;
+                                enumValueHolder[name_7] = enumValue;
                                 writtenMembers++;
                             }
                             if (typeof enumValue === 'number') {
                                 nextDefaultValue = enumValue + 1;
                             }
-                            else if (name_5) {
+                            else if (name_7) {
                                 nextDefaultValue = {
                                     __symbolic: 'binary',
                                     operator: '+',
                                     left: {
                                         __symbolic: 'select',
-                                        expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name_5
+                                        expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name_7
                                     }
                                 };
                             }
@@ -388,9 +399,11 @@ var MetadataCollector = (function () {
                             }
                         }
                         if (writtenMembers) {
-                            if (!metadata)
-                                metadata = {};
-                            metadata[enumName] = recordEntry(enumValueHolder, node);
+                            if (enumName) {
+                                if (!metadata)
+                                    metadata = {};
+                                metadata[enumName] = recordEntry(enumValueHolder, node);
+                            }
                         }
                     }
                     break;
@@ -409,9 +422,12 @@ var MetadataCollector = (function () {
                             var exported = false;
                             if (isExport(variableStatement) || isExport(variableDeclaration) ||
                                 isExportedIdentifier(nameNode)) {
-                                if (!metadata)
-                                    metadata = {};
-                                metadata[exportedIdentifierName(nameNode)] = recordEntry(varValue, node);
+                                var name_8 = exportedIdentifierName(nameNode);
+                                if (name_8) {
+                                    if (!metadata)
+                                        metadata = {};
+                                    metadata[name_8] = recordEntry(varValue, node);
+                                }
                                 exported = true;
                             }
                             if (typeof varValue == 'string' || typeof varValue == 'number' ||
@@ -439,13 +455,13 @@ var MetadataCollector = (function () {
                             var report_1 = function (nameNode) {
                                 switch (nameNode.kind) {
                                     case ts.SyntaxKind.Identifier:
-                                        var name_6 = nameNode;
-                                        var varValue = errorSym('Destructuring not supported', name_6);
-                                        locals.define(name_6.text, varValue);
+                                        var name_9 = nameNode;
+                                        var varValue = errorSym('Destructuring not supported', name_9);
+                                        locals.define(name_9.text, varValue);
                                         if (isExport(node)) {
                                             if (!metadata)
                                                 metadata = {};
-                                            metadata[name_6.text] = varValue;
+                                            metadata[name_9.text] = varValue;
                                         }
                                         break;
                                     case ts.SyntaxKind.BindingElement:
@@ -647,9 +663,9 @@ function namesOf(parameters) {
             var bindingPattern = name;
             for (var _i = 0, _a = bindingPattern.elements; _i < _a.length; _i++) {
                 var element = _a[_i];
-                var name_7 = element.name;
-                if (name_7) {
-                    addNamesOf(name_7);
+                var name_10 = element.name;
+                if (name_10) {
+                    addNamesOf(name_10);
                 }
             }
         }

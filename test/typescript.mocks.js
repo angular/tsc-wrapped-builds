@@ -194,12 +194,18 @@ function findVar(sourceFile, name) {
     return allChildren(sourceFile, function (node) { return isVar(node) && isNamed(node.name, name) ? node : undefined; });
 }
 exports.findVar = findVar;
+function findVarInitializer(sourceFile, name) {
+    var v = findVar(sourceFile, name);
+    expect(v && v.initializer).toBeDefined();
+    return v.initializer;
+}
+exports.findVarInitializer = findVarInitializer;
 function isClass(node) {
     return node.kind === ts.SyntaxKind.ClassDeclaration;
 }
 exports.isClass = isClass;
 function isNamed(node, name) {
-    return node.kind === ts.SyntaxKind.Identifier && node.text === name;
+    return !!node && node.kind === ts.SyntaxKind.Identifier && node.text === name;
 }
 exports.isNamed = isNamed;
 function isVar(node) {

@@ -161,13 +161,13 @@ function main(project, cliOptions, codegen, options) {
 exports.main = main;
 // CLI entry point
 if (require.main === module) {
-    var args_1 = process.argv.slice(2);
-    var _a = ts.parseCommandLine(args_1), options = _a.options, errors = _a.errors;
+    var args = process.argv.slice(2);
+    var _a = ts.parseCommandLine(args), options = _a.options, errors = _a.errors;
     tsc_1.check(errors);
     var project = options.project || '.';
     // TODO(alexeagle): command line should be TSC-compatible, remove "CliOptions" here
-    var cliOptions = new cli_options_1.CliOptions(require('minimist')(args_1));
-    main(project, cliOptions, null, options)
+    var cliOptions = new cli_options_1.CliOptions(require('minimist')(args));
+    main(project, cliOptions, undefined, options)
         .then(function (exitCode) { return process.exit(exitCode); })
         .catch(function (e) {
         console.error(e.stack);

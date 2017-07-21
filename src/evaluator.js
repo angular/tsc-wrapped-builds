@@ -53,7 +53,7 @@ function getSourceFileOfNode(node) {
 }
 /* @internal */
 function errorSymbol(message, node, context, sourceFile) {
-    var result;
+    var result = undefined;
     if (node) {
         sourceFile = sourceFile || getSourceFileOfNode(node);
         if (sourceFile) {
@@ -82,15 +82,15 @@ var Evaluator = (function () {
         this.options = options;
     }
     Evaluator.prototype.nameOf = function (node) {
-        if (node.kind == ts.SyntaxKind.Identifier) {
+        if (node && node.kind == ts.SyntaxKind.Identifier) {
             return node.text;
         }
-        var result = this.evaluateNode(node);
+        var result = node && this.evaluateNode(node);
         if (schema_1.isMetadataError(result) || typeof result === 'string') {
             return result;
         }
         else {
-            return errorSymbol('Name expected', node, { received: node.getText() });
+            return errorSymbol('Name expected', node, { received: (node && node.getText()) || '<missing>' });
         }
     };
     /**
@@ -291,30 +291,30 @@ var Evaluator = (function () {
                         return recordEntry(this.evaluateNode(arrowFunction.body), node);
                     }
                 }
-                var args_1 = arrayOrEmpty(callExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
-                if (!this.options.verboseInvalidExpression && args_1.some(schema_1.isMetadataError)) {
-                    return args_1.find(schema_1.isMetadataError);
+                var args = arrayOrEmpty(callExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
+                if (!this.options.verboseInvalidExpression && args.some(schema_1.isMetadataError)) {
+                    return args.find(schema_1.isMetadataError);
                 }
                 if (this.isFoldable(callExpression)) {
                     if (isMethodCallOf(callExpression, 'concat')) {
                         var arrayValue = this.evaluateNode(callExpression.expression.expression);
                         if (isFoldableError(arrayValue))
                             return arrayValue;
-                        return arrayValue.concat(args_1[0]);
+                        return arrayValue.concat(args[0]);
                     }
                 }
                 // Always fold a CONST_EXPR even if the argument is not foldable.
                 if (isCallOf(callExpression, 'CONST_EXPR') &&
                     arrayOrEmpty(callExpression.arguments).length === 1) {
-                    return recordEntry(args_1[0], node);
+                    return recordEntry(args[0], node);
                 }
                 var expression = this.evaluateNode(callExpression.expression);
                 if (isFoldableError(expression)) {
                     return recordEntry(expression, node);
                 }
                 var result = { __symbolic: 'call', expression: expression };
-                if (args_1 && args_1.length) {
-                    result.arguments = args_1;
+                if (args && args.length) {
+                    result.arguments = args;
                 }
                 return recordEntry(result, node);
             case ts.SyntaxKind.NewExpression:
@@ -405,10 +405,10 @@ var Evaluator = (function () {
                 }
                 if (!schema_1.isMetadataModuleReferenceExpression(typeReference) &&
                     typeReferenceNode.typeArguments && typeReferenceNode.typeArguments.length) {
-                    var args_2 = typeReferenceNode.typeArguments.map(function (element) { return _this.evaluateNode(element); });
+                    var args_1 = typeReferenceNode.typeArguments.map(function (element) { return _this.evaluateNode(element); });
                     // TODO: Remove typecast when upgraded to 2.0 as it will be corretly inferred.
                     // Some versions of 1.9 do not infer this correctly.
-                    typeReference.arguments = args_2;
+                    typeReference.arguments = args_1;
                 }
                 return recordEntry(typeReference, node);
             case ts.SyntaxKind.UnionType:
@@ -623,7 +623,7 @@ exports.Evaluator = Evaluator;
 function isPropertyAssignment(node) {
     return node.kind == ts.SyntaxKind.PropertyAssignment;
 }
-var empty = [];
+var empty = ts.createNodeArray();
 function arrayOrEmpty(v) {
     return v || empty;
 }
