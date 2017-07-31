@@ -1,4 +1,11 @@
 "use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -106,6 +113,7 @@ var MockNode = (function () {
 exports.MockNode = MockNode;
 var MockIdentifier = (function (_super) {
     __extends(MockIdentifier, _super);
+    // tslint:enable
     function MockIdentifier(name, kind, flags, pos, end) {
         if (kind === void 0) { kind = ts.SyntaxKind.Identifier; }
         if (flags === void 0) { flags = 0; }
@@ -152,7 +160,6 @@ var MockSymbol = (function () {
     MockSymbol.prototype.getDocumentationComment = function () { return []; };
     // TODO(vicb): removed in TS 2.2
     MockSymbol.prototype.getJsDocTags = function () { return []; };
-    ;
     MockSymbol.of = function (name) { return new MockSymbol(name); };
     return MockSymbol;
 }());
@@ -162,6 +169,7 @@ function expectNoDiagnostics(diagnostics) {
         var diagnostic = diagnostics_1[_i];
         var message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
         var _a = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start), line = _a.line, character = _a.character;
+        // tslint:disable-next-line:no-console
         console.log(diagnostic.file.fileName + " (" + (line + 1) + "," + (character + 1) + "): " + message);
     }
     expect(diagnostics.length).toBe(0);
