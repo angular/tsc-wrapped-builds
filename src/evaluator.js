@@ -75,11 +75,12 @@ exports.errorSymbol = errorSymbol;
  * possible.
  */
 var Evaluator = (function () {
-    function Evaluator(symbols, nodeMap, options) {
+    function Evaluator(symbols, nodeMap, options, recordExport) {
         if (options === void 0) { options = {}; }
         this.symbols = symbols;
         this.nodeMap = nodeMap;
         this.options = options;
+        this.recordExport = recordExport;
     }
     Evaluator.prototype.nameOf = function (node) {
         if (node && node.kind == ts.SyntaxKind.Identifier) {
@@ -204,6 +205,13 @@ var Evaluator = (function () {
         var t = this;
         var error;
         function recordEntry(entry, node) {
+            if (t.options.substituteExpression) {
+                var newEntry = t.options.substituteExpression(entry, node);
+                if (t.recordExport && newEntry != entry && schema_1.isMetadataGlobalReferenceExpression(newEntry)) {
+                    t.recordExport(newEntry.name, entry);
+                }
+                entry = newEntry;
+            }
             t.nodeMap.set(entry, node);
             return entry;
         }
@@ -253,7 +261,7 @@ var Evaluator = (function () {
                 if (this.options.quotedNames && quoted_1.length) {
                     obj_1['$quoted$'] = quoted_1;
                 }
-                return obj_1;
+                return recordEntry(obj_1, node);
             case ts.SyntaxKind.ArrayLiteralExpression:
                 var arr_1 = [];
                 ts.forEachChild(node, function (child) {
@@ -277,7 +285,7 @@ var Evaluator = (function () {
                 });
                 if (error)
                     return error;
-                return arr_1;
+                return recordEntry(arr_1, node);
             case spreadElementSyntaxKind:
                 var spreadExpression = this.evaluateNode(node.expression);
                 return recordEntry({ __symbolic: 'spread', expression: spreadExpression }, node);

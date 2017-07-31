@@ -97,4 +97,4 @@ var FILES = {
     'expressions.ts': "\n    import {someName, someBool, one, two} from './consts';\n  ",
     'imports.ts': "\n    import * as b from 'b';\n    import 'c';\n    import d from 'd';\n    import {f as g} from 'f';\n  "
 };
-//# sourceMappingURL=symbols.spec.js.map
+//# sourceMappingURL=symbols_spec.js.map

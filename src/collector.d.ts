@@ -6,11 +6,11 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import * as ts from 'typescript';
-import { ModuleMetadata } from './schema';
+import { MetadataValue, ModuleMetadata } from './schema';
 /**
  * A set of collector options to use when collecting metadata.
  */
-export declare class CollectorOptions {
+export interface CollectorOptions {
     /**
      * Version of the metadata to collect.
      */
@@ -24,6 +24,10 @@ export declare class CollectorOptions {
      * Do not simplify invalid expressions.
      */
     verboseInvalidExpression?: boolean;
+    /**
+     * An expression substitution callback.
+     */
+    substituteExpression?: (value: MetadataValue, node: ts.Node) => MetadataValue;
 }
 /**
  * Collect decorator metadata from a TypeScript module.
@@ -35,5 +39,5 @@ export declare class MetadataCollector {
      * Returns a JSON.stringify friendly form describing the decorators of the exported classes from
      * the source file that is expected to correspond to a module.
      */
-    getMetadata(sourceFile: ts.SourceFile, strict?: boolean): ModuleMetadata | undefined;
+    getMetadata(sourceFile: ts.SourceFile, strict?: boolean, substituteExpression?: (value: MetadataValue, node: ts.Node) => MetadataValue): ModuleMetadata | undefined;
 }

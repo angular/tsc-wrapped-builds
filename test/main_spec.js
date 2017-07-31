@@ -206,4 +206,4 @@ describe('tsc-wrapped', function () {
             .catch(function (e) { return done.fail(e); });
     });
 });
-//# sourceMappingURL=main.spec.js.map
+//# sourceMappingURL=main_spec.js.map

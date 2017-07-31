@@ -200,6 +200,33 @@ describe('Evaluator', function () {
         expect(evaluator.evaluateNode(expr.initializer))
             .toEqual({ __symbolic: 'new', expression: { __symbolic: 'reference', name: 'f' } });
     });
+    describe('with substitution', function () {
+        var evaluator;
+        var lambdaTemp = 'lambdaTemp';
+        beforeEach(function () {
+            evaluator = new evaluator_1.Evaluator(symbols, new Map(), {
+                substituteExpression: function (value, node) {
+                    if (node.kind == ts.SyntaxKind.ArrowFunction) {
+                        return { __symbolic: 'reference', name: lambdaTemp };
+                    }
+                    return value;
+                }
+            });
+        });
+        it('should be able to substitute a lambda with a reference', function () {
+            var source = sourceFileOf("\n        var b = 1;\n        export var a = () => b;\n      ");
+            var expr = typescript_mocks_1.findVar(source, 'a');
+            expect(evaluator.evaluateNode(expr.initializer))
+                .toEqual({ __symbolic: 'reference', name: lambdaTemp });
+        });
+        it('should be able to substitute a lambda in an expression', function () {
+            var source = sourceFileOf("\n        var b = 1;\n        export var a = [\n          { provide: 'someValue': useFactory: () => b }\n        ];\n      ");
+            var expr = typescript_mocks_1.findVar(source, 'a');
+            expect(evaluator.evaluateNode(expr.initializer)).toEqual([
+                { provide: 'someValue', useFactory: { __symbolic: 'reference', name: lambdaTemp } }
+            ]);
+        });
+    });
 });
 function sourceFileOf(text) {
     return ts.createSourceFile('test.ts', text, ts.ScriptTarget.Latest, true);
@@ -217,4 +244,4 @@ var FILES = {
     'errors.ts': "\n    let f = () => 1;\n    let e: NotFound;\n    let s = { 1: 1, 2: 2 };\n    let t = typeof 12;\n  ",
     'declared.ts': "\n    declare namespace Foo {\n      type A = string;\n    }\n\n    let a: Foo.A = 'some value';\n  "
 };
-//# sourceMappingURL=evaluator.spec.js.map
+//# sourceMappingURL=evaluator_spec.js.map

@@ -31,7 +31,8 @@ export declare class Evaluator {
     private symbols;
     private nodeMap;
     private options;
-    constructor(symbols: Symbols, nodeMap: Map<MetadataEntry, ts.Node>, options?: CollectorOptions);
+    private recordExport;
+    constructor(symbols: Symbols, nodeMap: Map<MetadataEntry, ts.Node>, options?: CollectorOptions, recordExport?: (name: string, value: MetadataValue) => void);
     nameOf(node: ts.Node | undefined): string | MetadataError;
     /**
      * Returns true if the expression represented by `node` can be folded into a literal expression.

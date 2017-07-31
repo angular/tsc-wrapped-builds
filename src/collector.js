@@ -6,6 +6,14 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var __assign = (this && this.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var ts = require("typescript");
 var evaluator_1 = require("./evaluator");
@@ -24,15 +32,6 @@ var isStatic = ts.ModifierFlags ?
     }) :
     (function (node) { return !!((node.flags & ts.NodeFlags.Static)); });
 /**
- * A set of collector options to use when collecting metadata.
- */
-var CollectorOptions = (function () {
-    function CollectorOptions() {
-    }
-    return CollectorOptions;
-}());
-exports.CollectorOptions = CollectorOptions;
-/**
  * Collect decorator metadata from a TypeScript module.
  */
 var MetadataCollector = (function () {
@@ -44,12 +43,24 @@ var MetadataCollector = (function () {
      * Returns a JSON.stringify friendly form describing the decorators of the exported classes from
      * the source file that is expected to correspond to a module.
      */
-    MetadataCollector.prototype.getMetadata = function (sourceFile, strict) {
+    MetadataCollector.prototype.getMetadata = function (sourceFile, strict, substituteExpression) {
+        var _this = this;
         if (strict === void 0) { strict = false; }
         var locals = new symbols_1.Symbols(sourceFile);
         var nodeMap = new Map();
-        var evaluator = new evaluator_1.Evaluator(locals, nodeMap, this.options);
+        var composedSubstituter = substituteExpression && this.options.substituteExpression ?
+            function (value, node) {
+                return _this.options.substituteExpression(substituteExpression(value, node), node);
+            } :
+            substituteExpression;
+        var evaluatorOptions = substituteExpression ? __assign({}, this.options, { substituteExpression: composedSubstituter }) :
+            this.options;
         var metadata;
+        var evaluator = new evaluator_1.Evaluator(locals, nodeMap, evaluatorOptions, function (name, value) {
+            if (!metadata)
+                metadata = {};
+            metadata[name] = value;
+        });
         var exports = undefined;
         function objFromDecorator(decoratorNode) {
             return evaluator.evaluateNode(decoratorNode.expression);

@@ -35,4 +35,4 @@ describe('options parsing', function () {
         });
     });
 });
-//# sourceMappingURL=tsc.spec.js.map
+//# sourceMappingURL=tsc_spec.js.map

@@ -785,6 +785,35 @@ describe('Collector', function () {
             });
         });
     });
+    describe('substitutions', function () {
+        var lambdaTemp = 'lambdaTemp';
+        it('should be able to substitute a lambda', function () {
+            var source = createSource("\n        const b = 1;\n        export const a = () => b; \n      ");
+            var metadata = collector.getMetadata(source, /* strict */ false, function (value, node) {
+                if (node.kind === ts.SyntaxKind.ArrowFunction) {
+                    return { __symbolic: 'reference', name: lambdaTemp };
+                }
+                return value;
+            });
+            expect(metadata.metadata['a']).toEqual({ __symbolic: 'reference', name: lambdaTemp });
+        });
+        it('should compose substitution functions', function () {
+            var collector = new collector_1.MetadataCollector({
+                substituteExpression: function (value, node) { return schema_1.isMetadataGlobalReferenceExpression(value) &&
+                    value.name == lambdaTemp ?
+                    { __symbolic: 'reference', name: value.name + '2' } :
+                    value; }
+            });
+            var source = createSource("\n        const b = 1;\n        export const a = () => b; \n      ");
+            var metadata = collector.getMetadata(source, /* strict */ false, function (value, node) {
+                if (node.kind === ts.SyntaxKind.ArrowFunction) {
+                    return { __symbolic: 'reference', name: lambdaTemp };
+                }
+                return value;
+            });
+            expect(metadata.metadata['a']).toEqual({ __symbolic: 'reference', name: lambdaTemp + '2' });
+        });
+    });
     function override(fileName, content) {
         host.overrideFile(fileName, content);
         host.addFile(fileName);
@@ -852,4 +881,4 @@ var FILES = {
 function createSource(text) {
     return ts.createSourceFile('', text, ts.ScriptTarget.Latest, true);
 }
-//# sourceMappingURL=collector.spec.js.map
+//# sourceMappingURL=collector_spec.js.map
