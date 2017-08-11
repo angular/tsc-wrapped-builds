@@ -124,40 +124,36 @@ var MetadataWriterHost = (function (_super) {
     return MetadataWriterHost;
 }(DelegatingHost));
 exports.MetadataWriterHost = MetadataWriterHost;
-var SyntheticIndexHost = (function (_super) {
-    __extends(SyntheticIndexHost, _super);
-    function SyntheticIndexHost(delegate, syntheticIndex) {
-        var _this = _super.call(this, delegate) || this;
-        _this.fileExists = function (fileName) {
-            return path_1.normalize(fileName) == _this.normalSyntheticIndexName ||
-                _this.delegate.fileExists(fileName);
-        };
-        _this.readFile = function (fileName) {
-            return path_1.normalize(fileName) == _this.normalSyntheticIndexName ?
-                _this.indexContent :
-                _this.delegate.readFile(fileName);
-        };
-        _this.getSourceFile = function (fileName, languageVersion, onError) {
-            if (path_1.normalize(fileName) == _this.normalSyntheticIndexName) {
-                return ts.createSourceFile(fileName, _this.indexContent, languageVersion, true);
+function createSyntheticIndexHost(delegate, syntheticIndex) {
+    var normalSyntheticIndexName = path_1.normalize(syntheticIndex.name);
+    var indexContent = syntheticIndex.content;
+    var indexMetadata = syntheticIndex.metadata;
+    var newHost = Object.create(delegate);
+    newHost.fileExists = function (fileName) {
+        return path_1.normalize(fileName) == normalSyntheticIndexName || delegate.fileExists(fileName);
+    };
+    newHost.readFile = function (fileName) {
+        return path_1.normalize(fileName) == normalSyntheticIndexName ? indexContent :
+            delegate.readFile(fileName);
+    };
+    newHost.getSourceFile =
+        function (fileName, languageVersion, onError) {
+            if (path_1.normalize(fileName) == normalSyntheticIndexName) {
+                return ts.createSourceFile(fileName, indexContent, languageVersion, true);
             }
-            return _this.delegate.getSourceFile(fileName, languageVersion, onError);
+            return delegate.getSourceFile(fileName, languageVersion, onError);
         };
-        _this.writeFile = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
-            _this.delegate.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+    newHost.writeFile =
+        function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
+            delegate.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
             if (fileName.match(DTS) && sourceFiles && sourceFiles.length == 1 &&
-                path_1.normalize(sourceFiles[0].fileName) == _this.normalSyntheticIndexName) {
+                path_1.normalize(sourceFiles[0].fileName) == normalSyntheticIndexName) {
                 // If we are writing the synthetic index, write the metadata along side.
                 var metadataName = fileName.replace(DTS, '.metadata.json');
-                fs_1.writeFileSync(metadataName, _this.indexMetadata, { encoding: 'utf8' });
+                fs_1.writeFileSync(metadataName, indexMetadata, { encoding: 'utf8' });
             }
         };
-        _this.normalSyntheticIndexName = path_1.normalize(syntheticIndex.name);
-        _this.indexContent = syntheticIndex.content;
-        _this.indexMetadata = syntheticIndex.metadata;
-        return _this;
-    }
-    return SyntheticIndexHost;
-}(DelegatingHost));
-exports.SyntheticIndexHost = SyntheticIndexHost;
+    return newHost;
+}
+exports.createSyntheticIndexHost = createSyntheticIndexHost;
 //# sourceMappingURL=compiler_host.js.map

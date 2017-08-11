@@ -45,7 +45,7 @@ function createBundleIndexHost(ngOptions, rootFiles, host) {
     var name = path.join(path.dirname(indexModule), ngOptions.flatModuleOutFile.replace(JS_EXT, '.ts'));
     var libraryIndex = "./" + path.basename(indexModule);
     var content = index_writer_1.privateEntriesToIndex(libraryIndex, metadataBundle.privates);
-    host = new compiler_host_1.SyntheticIndexHost(host, { name: name, content: content, metadata: metadata });
+    host = compiler_host_1.createSyntheticIndexHost(host, { name: name, content: content, metadata: metadata });
     return { host: host, indexName: name };
 }
 exports.createBundleIndexHost = createBundleIndexHost;

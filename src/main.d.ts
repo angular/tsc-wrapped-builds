@@ -9,8 +9,8 @@ export interface CodegenExtension {
      */
     (ngOptions: NgOptions, cliOptions: CliOptions, program: ts.Program, host: ts.CompilerHost): Promise<string[]>;
 }
-export declare function createBundleIndexHost(ngOptions: NgOptions, rootFiles: string[], host: ts.CompilerHost): {
-    host: ts.CompilerHost;
+export declare function createBundleIndexHost<H extends ts.CompilerHost>(ngOptions: NgOptions, rootFiles: string[], host: H): {
+    host: H;
     indexName?: string;
     errors?: ts.Diagnostic[];
 };
