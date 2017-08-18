@@ -251,7 +251,9 @@ var MetadataCollector = (function () {
         var isExportedIdentifier = function (identifier) {
             return identifier && exportMap.has(identifier.text);
         };
-        var isExported = function (node) { return isExport(node) || isExportedIdentifier(node.name); };
+        var isExported = function (node) {
+            return isExport(node) || isExportedIdentifier(node.name);
+        };
         var exportedIdentifierName = function (identifier) {
             return identifier && (exportMap.get(identifier.text) || identifier.text);
         };
@@ -342,14 +344,25 @@ var MetadataCollector = (function () {
                     }
                     // Otherwise don't record metadata for the class.
                     break;
-                case ts.SyntaxKind.InterfaceDeclaration:
-                    var interfaceDeclaration = node;
-                    if (interfaceDeclaration.name && isExported(interfaceDeclaration)) {
-                        var name_5 = exportedName(interfaceDeclaration);
+                case ts.SyntaxKind.TypeAliasDeclaration:
+                    var typeDeclaration = node;
+                    if (typeDeclaration.name && isExported(typeDeclaration)) {
+                        var name_5 = exportedName(typeDeclaration);
                         if (name_5) {
                             if (!metadata)
                                 metadata = {};
                             metadata[name_5] = { __symbolic: 'interface' };
+                        }
+                    }
+                    break;
+                case ts.SyntaxKind.InterfaceDeclaration:
+                    var interfaceDeclaration = node;
+                    if (interfaceDeclaration.name && isExported(interfaceDeclaration)) {
+                        var name_6 = exportedName(interfaceDeclaration);
+                        if (name_6) {
+                            if (!metadata)
+                                metadata = {};
+                            metadata[name_6] = { __symbolic: 'interface' };
                         }
                     }
                     break;
@@ -358,12 +371,12 @@ var MetadataCollector = (function () {
                     // names substitution will be performed by the StaticReflector.
                     var functionDeclaration = node;
                     if (isExported(functionDeclaration) && functionDeclaration.name) {
-                        var name_6 = exportedName(functionDeclaration);
+                        var name_7 = exportedName(functionDeclaration);
                         var maybeFunc = maybeGetSimpleFunction(functionDeclaration);
-                        if (name_6) {
+                        if (name_7) {
                             if (!metadata)
                                 metadata = {};
-                            metadata[name_6] =
+                            metadata[name_7] =
                                 maybeFunc ? recordEntry(maybeFunc.func, node) : { __symbolic: 'function' };
                         }
                     }
@@ -384,23 +397,23 @@ var MetadataCollector = (function () {
                             else {
                                 enumValue = evaluator.evaluateNode(member.initializer);
                             }
-                            var name_7 = undefined;
+                            var name_8 = undefined;
                             if (member.name.kind == ts.SyntaxKind.Identifier) {
                                 var identifier = member.name;
-                                name_7 = identifier.text;
-                                enumValueHolder[name_7] = enumValue;
+                                name_8 = identifier.text;
+                                enumValueHolder[name_8] = enumValue;
                                 writtenMembers++;
                             }
                             if (typeof enumValue === 'number') {
                                 nextDefaultValue = enumValue + 1;
                             }
-                            else if (name_7) {
+                            else if (name_8) {
                                 nextDefaultValue = {
                                     __symbolic: 'binary',
                                     operator: '+',
                                     left: {
                                         __symbolic: 'select',
-                                        expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name_7
+                                        expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name_8
                                     }
                                 };
                             }
@@ -433,11 +446,11 @@ var MetadataCollector = (function () {
                             var exported = false;
                             if (isExport(variableStatement) || isExport(variableDeclaration) ||
                                 isExportedIdentifier(nameNode)) {
-                                var name_8 = exportedIdentifierName(nameNode);
-                                if (name_8) {
+                                var name_9 = exportedIdentifierName(nameNode);
+                                if (name_9) {
                                     if (!metadata)
                                         metadata = {};
-                                    metadata[name_8] = recordEntry(varValue, node);
+                                    metadata[name_9] = recordEntry(varValue, node);
                                 }
                                 exported = true;
                             }
@@ -466,13 +479,13 @@ var MetadataCollector = (function () {
                             var report_1 = function (nameNode) {
                                 switch (nameNode.kind) {
                                     case ts.SyntaxKind.Identifier:
-                                        var name_9 = nameNode;
-                                        var varValue = errorSym('Destructuring not supported', name_9);
-                                        locals.define(name_9.text, varValue);
+                                        var name_10 = nameNode;
+                                        var varValue = errorSym('Destructuring not supported', name_10);
+                                        locals.define(name_10.text, varValue);
                                         if (isExport(node)) {
                                             if (!metadata)
                                                 metadata = {};
-                                            metadata[name_9.text] = varValue;
+                                            metadata[name_10.text] = varValue;
                                         }
                                         break;
                                     case ts.SyntaxKind.BindingElement:
@@ -674,9 +687,9 @@ function namesOf(parameters) {
             var bindingPattern = name;
             for (var _i = 0, _a = bindingPattern.elements; _i < _a.length; _i++) {
                 var element = _a[_i];
-                var name_10 = element.name;
-                if (name_10) {
-                    addNamesOf(name_10);
+                var name_11 = element.name;
+                if (name_11) {
+                    addNamesOf(name_11);
                 }
             }
         }
