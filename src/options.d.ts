@@ -18,8 +18,6 @@ interface Options extends ts.CompilerOptions {
     annotateForClosureCompiler?: boolean;
     annotationsAs?: 'decorators' | 'static fields';
     trace?: boolean;
-    /** @deprecated since v4 this option has no effect anymore. */
-    debug?: boolean;
     enableLegacyTemplate?: boolean;
     enableSummariesForJit?: boolean;
     alwaysCompileGeneratedCode?: boolean;
