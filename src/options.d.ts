@@ -21,5 +21,6 @@ interface Options extends ts.CompilerOptions {
     enableLegacyTemplate?: boolean;
     enableSummariesForJit?: boolean;
     alwaysCompileGeneratedCode?: boolean;
+    preserveWhitespaces?: boolean;
 }
 export default Options;
