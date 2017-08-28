@@ -1,3 +1,4 @@
+"use strict";
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -5,7 +6,15 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-"use strict";
+var __assign = (this && this.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 var ts = require("typescript");
 var evaluator_1 = require("./evaluator");
 var schema_1 = require("./schema");
@@ -23,15 +32,6 @@ var isStatic = ts.ModifierFlags ?
     }) :
     (function (node) { return !!((node.flags & ts.NodeFlags.Static)); });
 /**
- * A set of collector options to use when collecting metadata.
- */
-var CollectorOptions = (function () {
-    function CollectorOptions() {
-    }
-    return CollectorOptions;
-}());
-exports.CollectorOptions = CollectorOptions;
-/**
  * Collect decorator metadata from a TypeScript module.
  */
 var MetadataCollector = (function () {
@@ -43,13 +43,25 @@ var MetadataCollector = (function () {
      * Returns a JSON.stringify friendly form describing the decorators of the exported classes from
      * the source file that is expected to correspond to a module.
      */
-    MetadataCollector.prototype.getMetadata = function (sourceFile, strict) {
+    MetadataCollector.prototype.getMetadata = function (sourceFile, strict, substituteExpression) {
+        var _this = this;
         if (strict === void 0) { strict = false; }
         var locals = new symbols_1.Symbols(sourceFile);
         var nodeMap = new Map();
-        var evaluator = new evaluator_1.Evaluator(locals, nodeMap, this.options);
+        var composedSubstituter = substituteExpression && this.options.substituteExpression ?
+            function (value, node) {
+                return _this.options.substituteExpression(substituteExpression(value, node), node);
+            } :
+            substituteExpression;
+        var evaluatorOptions = substituteExpression ? __assign({}, this.options, { substituteExpression: composedSubstituter }) :
+            this.options;
         var metadata;
-        var exports;
+        var evaluator = new evaluator_1.Evaluator(locals, nodeMap, evaluatorOptions, function (name, value) {
+            if (!metadata)
+                metadata = {};
+            metadata[name] = value;
+        });
+        var exports = undefined;
         function objFromDecorator(decoratorNode) {
             return evaluator.evaluateNode(decoratorNode.expression);
         }
@@ -61,7 +73,7 @@ var MetadataCollector = (function () {
             return evaluator_1.errorSymbol(message, node, context, sourceFile);
         }
         function maybeGetSimpleFunction(functionDeclaration) {
-            if (functionDeclaration.name.kind == ts.SyntaxKind.Identifier) {
+            if (functionDeclaration.name && functionDeclaration.name.kind == ts.SyntaxKind.Identifier) {
                 var nameNode = functionDeclaration.name;
                 var functionName = nameNode.text;
                 var functionBody = functionDeclaration.body;
@@ -227,6 +239,7 @@ var MetadataCollector = (function () {
                     var exportDeclaration = node;
                     var moduleSpecifier = exportDeclaration.moduleSpecifier, exportClause = exportDeclaration.exportClause;
                     if (!moduleSpecifier) {
+                        // If there is a module specifier there is also an exportClause
                         exportClause.elements.forEach(function (spec) {
                             var exportedAs = spec.name.text;
                             var name = (spec.propertyName || spec.name).text;
@@ -235,10 +248,14 @@ var MetadataCollector = (function () {
                     }
             }
         });
-        var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
-        var isExported = function (node) { return isExport(node) || isExportedIdentifier(node.name); };
+        var isExportedIdentifier = function (identifier) {
+            return identifier && exportMap.has(identifier.text);
+        };
+        var isExported = function (node) {
+            return isExport(node) || isExportedIdentifier(node.name);
+        };
         var exportedIdentifierName = function (identifier) {
-            return exportMap.get(identifier.text) || identifier.text;
+            return identifier && (exportMap.get(identifier.text) || identifier.text);
         };
         var exportedName = function (node) { return exportedIdentifierName(node.name); };
         // Predeclare classes and functions
@@ -317,32 +334,51 @@ var MetadataCollector = (function () {
                     var classDeclaration = node;
                     if (classDeclaration.name) {
                         if (isExported(classDeclaration)) {
-                            if (!metadata)
-                                metadata = {};
-                            metadata[exportedName(classDeclaration)] = classMetadataOf(classDeclaration);
+                            var name_4 = exportedName(classDeclaration);
+                            if (name_4) {
+                                if (!metadata)
+                                    metadata = {};
+                                metadata[name_4] = classMetadataOf(classDeclaration);
+                            }
                         }
                     }
                     // Otherwise don't record metadata for the class.
                     break;
+                case ts.SyntaxKind.TypeAliasDeclaration:
+                    var typeDeclaration = node;
+                    if (typeDeclaration.name && isExported(typeDeclaration)) {
+                        var name_5 = exportedName(typeDeclaration);
+                        if (name_5) {
+                            if (!metadata)
+                                metadata = {};
+                            metadata[name_5] = { __symbolic: 'interface' };
+                        }
+                    }
+                    break;
                 case ts.SyntaxKind.InterfaceDeclaration:
                     var interfaceDeclaration = node;
                     if (interfaceDeclaration.name && isExported(interfaceDeclaration)) {
-                        if (!metadata)
-                            metadata = {};
-                        metadata[exportedName(interfaceDeclaration)] = { __symbolic: 'interface' };
+                        var name_6 = exportedName(interfaceDeclaration);
+                        if (name_6) {
+                            if (!metadata)
+                                metadata = {};
+                            metadata[name_6] = { __symbolic: 'interface' };
+                        }
                     }
                     break;
                 case ts.SyntaxKind.FunctionDeclaration:
                     // Record functions that return a single value. Record the parameter
                     // names substitution will be performed by the StaticReflector.
                     var functionDeclaration = node;
-                    if (isExported(functionDeclaration)) {
-                        if (!metadata)
-                            metadata = {};
-                        var name_4 = exportedName(functionDeclaration);
+                    if (isExported(functionDeclaration) && functionDeclaration.name) {
+                        var name_7 = exportedName(functionDeclaration);
                         var maybeFunc = maybeGetSimpleFunction(functionDeclaration);
-                        metadata[name_4] =
-                            maybeFunc ? recordEntry(maybeFunc.func, node) : { __symbolic: 'function' };
+                        if (name_7) {
+                            if (!metadata)
+                                metadata = {};
+                            metadata[name_7] =
+                                maybeFunc ? recordEntry(maybeFunc.func, node) : { __symbolic: 'function' };
+                        }
                     }
                     break;
                 case ts.SyntaxKind.EnumDeclaration:
@@ -361,23 +397,23 @@ var MetadataCollector = (function () {
                             else {
                                 enumValue = evaluator.evaluateNode(member.initializer);
                             }
-                            var name_5 = undefined;
+                            var name_8 = undefined;
                             if (member.name.kind == ts.SyntaxKind.Identifier) {
                                 var identifier = member.name;
-                                name_5 = identifier.text;
-                                enumValueHolder[name_5] = enumValue;
+                                name_8 = identifier.text;
+                                enumValueHolder[name_8] = enumValue;
                                 writtenMembers++;
                             }
                             if (typeof enumValue === 'number') {
                                 nextDefaultValue = enumValue + 1;
                             }
-                            else if (name_5) {
+                            else if (name_8) {
                                 nextDefaultValue = {
                                     __symbolic: 'binary',
                                     operator: '+',
                                     left: {
                                         __symbolic: 'select',
-                                        expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name_5
+                                        expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name_8
                                     }
                                 };
                             }
@@ -387,9 +423,11 @@ var MetadataCollector = (function () {
                             }
                         }
                         if (writtenMembers) {
-                            if (!metadata)
-                                metadata = {};
-                            metadata[enumName] = recordEntry(enumValueHolder, node);
+                            if (enumName) {
+                                if (!metadata)
+                                    metadata = {};
+                                metadata[enumName] = recordEntry(enumValueHolder, node);
+                            }
                         }
                     }
                     break;
@@ -408,14 +446,20 @@ var MetadataCollector = (function () {
                             var exported = false;
                             if (isExport(variableStatement) || isExport(variableDeclaration) ||
                                 isExportedIdentifier(nameNode)) {
-                                if (!metadata)
-                                    metadata = {};
-                                metadata[exportedIdentifierName(nameNode)] = recordEntry(varValue, node);
+                                var name_9 = exportedIdentifierName(nameNode);
+                                if (name_9) {
+                                    if (!metadata)
+                                        metadata = {};
+                                    metadata[name_9] = recordEntry(varValue, node);
+                                }
                                 exported = true;
                             }
                             if (typeof varValue == 'string' || typeof varValue == 'number' ||
                                 typeof varValue == 'boolean') {
                                 locals.define(nameNode.text, varValue);
+                                if (exported) {
+                                    locals.defineReference(nameNode.text, { __symbolic: 'reference', name: nameNode.text });
+                                }
                             }
                             else if (!exported) {
                                 if (varValue && !schema_1.isMetadataError(varValue)) {
@@ -435,13 +479,13 @@ var MetadataCollector = (function () {
                             var report_1 = function (nameNode) {
                                 switch (nameNode.kind) {
                                     case ts.SyntaxKind.Identifier:
-                                        var name_6 = nameNode;
-                                        var varValue = errorSym('Destructuring not supported', name_6);
-                                        locals.define(name_6.text, varValue);
+                                        var name_10 = nameNode;
+                                        var varValue = errorSym('Destructuring not supported', name_10);
+                                        locals.define(name_10.text, varValue);
                                         if (isExport(node)) {
                                             if (!metadata)
                                                 metadata = {};
-                                            metadata[name_6.text] = varValue;
+                                            metadata[name_10.text] = varValue;
                                         }
                                         break;
                                     case ts.SyntaxKind.BindingElement:
@@ -643,9 +687,9 @@ function namesOf(parameters) {
             var bindingPattern = name;
             for (var _i = 0, _a = bindingPattern.elements; _i < _a.length; _i++) {
                 var element = _a[_i];
-                var name_7 = element.name;
-                if (name_7) {
-                    addNamesOf(name_7);
+                var name_11 = element.name;
+                if (name_11) {
+                    addNamesOf(name_11);
                 }
             }
         }

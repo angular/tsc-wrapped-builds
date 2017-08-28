@@ -1,9 +1,22 @@
 "use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require("fs");
 var ts = require("typescript");
 var Host = (function () {
@@ -100,6 +113,7 @@ var MockNode = (function () {
 exports.MockNode = MockNode;
 var MockIdentifier = (function (_super) {
     __extends(MockIdentifier, _super);
+    // tslint:enable
     function MockIdentifier(name, kind, flags, pos, end) {
         if (kind === void 0) { kind = ts.SyntaxKind.Identifier; }
         if (flags === void 0) { flags = 0; }
@@ -146,7 +160,6 @@ var MockSymbol = (function () {
     MockSymbol.prototype.getDocumentationComment = function () { return []; };
     // TODO(vicb): removed in TS 2.2
     MockSymbol.prototype.getJsDocTags = function () { return []; };
-    ;
     MockSymbol.of = function (name) { return new MockSymbol(name); };
     return MockSymbol;
 }());
@@ -156,6 +169,7 @@ function expectNoDiagnostics(diagnostics) {
         var diagnostic = diagnostics_1[_i];
         var message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
         var _a = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start), line = _a.line, character = _a.character;
+        // tslint:disable-next-line:no-console
         console.log(diagnostic.file.fileName + " (" + (line + 1) + "," + (character + 1) + "): " + message);
     }
     expect(diagnostics.length).toBe(0);
@@ -188,12 +202,18 @@ function findVar(sourceFile, name) {
     return allChildren(sourceFile, function (node) { return isVar(node) && isNamed(node.name, name) ? node : undefined; });
 }
 exports.findVar = findVar;
+function findVarInitializer(sourceFile, name) {
+    var v = findVar(sourceFile, name);
+    expect(v && v.initializer).toBeDefined();
+    return v.initializer;
+}
+exports.findVarInitializer = findVarInitializer;
 function isClass(node) {
     return node.kind === ts.SyntaxKind.ClassDeclaration;
 }
 exports.isClass = isClass;
 function isNamed(node, name) {
-    return node.kind === ts.SyntaxKind.Identifier && node.text === name;
+    return !!node && node.kind === ts.SyntaxKind.Identifier && node.text === name;
 }
 exports.isNamed = isNamed;
 function isVar(node) {
