@@ -252,7 +252,9 @@ var Evaluator = (function () {
                                 return true; // Stop the forEachChild.
                             }
                             else {
-                                obj_1[propertyName] = propertyValue;
+                                obj_1[propertyName] = isPropertyAssignment(assignment) ?
+                                    recordEntry(propertyValue, assignment.initializer) :
+                                    propertyValue;
                             }
                     }
                 });
