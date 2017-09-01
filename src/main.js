@@ -11,44 +11,12 @@ var fs = require("fs");
 var path = require("path");
 var tsickle = require("tsickle");
 var ts = require("typescript");
-var bundler_1 = require("./bundler");
 var cli_options_1 = require("./cli_options");
 var compiler_host_1 = require("./compiler_host");
-var index_writer_1 = require("./index_writer");
+var main_no_tsickle_1 = require("./main_no_tsickle");
 var tsc_1 = require("./tsc");
 var vinyl_file_1 = require("./vinyl_file");
-var tsc_2 = require("./tsc");
-exports.UserError = tsc_2.UserError;
-var DTS = /\.d\.ts$/;
-var JS_EXT = /(\.js|)$/;
 var TS_EXT = /\.ts$/;
-function createBundleIndexHost(ngOptions, rootFiles, host) {
-    var files = rootFiles.filter(function (f) { return !DTS.test(f); });
-    if (files.length != 1) {
-        return {
-            host: host,
-            errors: [{
-                    file: null,
-                    start: null,
-                    length: null,
-                    messageText: 'Angular compiler option "flatModuleIndex" requires one and only one .ts file in the "files" field.',
-                    category: ts.DiagnosticCategory.Error,
-                    code: 0
-                }]
-        };
-    }
-    var file = files[0];
-    var indexModule = file.replace(/\.ts$/, '');
-    var bundler = new bundler_1.MetadataBundler(indexModule, ngOptions.flatModuleId, new bundler_1.CompilerHostAdapter(host));
-    var metadataBundle = bundler.getMetadataBundle();
-    var metadata = JSON.stringify(metadataBundle.metadata);
-    var name = path.join(path.dirname(indexModule), ngOptions.flatModuleOutFile.replace(JS_EXT, '.ts'));
-    var libraryIndex = "./" + path.basename(indexModule);
-    var content = index_writer_1.privateEntriesToIndex(libraryIndex, metadataBundle.privates);
-    host = compiler_host_1.createSyntheticIndexHost(host, { name: name, content: content, metadata: metadata });
-    return { host: host, indexName: name };
-}
-exports.createBundleIndexHost = createBundleIndexHost;
 function main(project, cliOptions, codegen, options) {
     try {
         var projectDir = project;
@@ -80,7 +48,7 @@ function main(project, cliOptions, codegen, options) {
         // If the compilation is a flat module index then produce the flat module index
         // metadata and the synthetic flat module index.
         if (ngOptions_1.flatModuleOutFile && !ngOptions_1.skipMetadataEmit) {
-            var _b = createBundleIndexHost(ngOptions_1, rootFileNames_1, host_1), bundleHost = _b.host, indexName = _b.indexName, errors_1 = _b.errors;
+            var _b = main_no_tsickle_1.createBundleIndexHost(ngOptions_1, rootFileNames_1, host_1), bundleHost = _b.host, indexName = _b.indexName, errors_1 = _b.errors;
             if (errors_1)
                 tsc_1.check(errors_1);
             if (indexName)
