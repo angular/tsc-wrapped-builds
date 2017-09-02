@@ -656,7 +656,7 @@ describe('Collector', function () {
         });
     });
     it('should treat exported class expressions as a class', function () {
-        var source = ts.createSourceFile('', "\n    export const InjectionToken: {new<T>(desc: string): InjectionToken<T>;} = class extends OpaqueToken {\n      constructor(desc: string) {\n        super(desc);\n      }\n\n      toString(): string { return `InjectionToken " + _this._desc + "`; }\n    } as any;", ts.ScriptTarget.Latest, true);
+        var source = ts.createSourceFile('', "\n    export const InjectionToken: {new<T>(desc: string): InjectionToken<T>;} = class {\n      constructor(protected _desc: string) {}\n\n      toString(): string { return `InjectionToken " + _this._desc + "`; }\n    } as any;", ts.ScriptTarget.Latest, true);
         var metadata = collector.getMetadata(source);
         expect(metadata.metadata).toEqual({ InjectionToken: { __symbolic: 'class' } });
     });
