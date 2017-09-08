@@ -215,7 +215,7 @@ var MetadataBundler = (function () {
                 // keep one entry and replace the others by references
                 names.forEach(function (name, i) {
                     if (i !== reference_1) {
-                        result[name] = { __symbolic: 'reference', name: declaredName };
+                        result[name] = { __symbolic: 'reference', name: names[reference_1] };
                     }
                 });
             }

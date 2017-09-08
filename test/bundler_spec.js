@@ -136,7 +136,7 @@ describe('metadata bundler', function () {
         expect(A2.name).toEqual('A');
         expect(B1.__symbolic).toEqual('class');
         expect(B2.__symbolic).toEqual('reference');
-        expect(B2.name).toEqual('B');
+        expect(B2.name).toEqual('B1');
     });
 });
 var MockStringBundlerHost = (function () {
