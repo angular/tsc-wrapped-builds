@@ -77,7 +77,7 @@ describe('Symbols', function () {
             switch (node.kind) {
                 case ts.SyntaxKind.VariableStatement:
                 case ts.SyntaxKind.VariableDeclarationList:
-                    return ts.forEachChild(node, visit);
+                    return !!ts.forEachChild(node, visit);
                 case ts.SyntaxKind.VariableDeclaration:
                     var variableDeclaration = node;
                     var nameNode = variableDeclaration.name;

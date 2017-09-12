@@ -40,7 +40,7 @@ describe('tsc-wrapped', function () {
             // No helpers since decorators were lowered
             expect(out).not.toContain('__decorate');
             // Expand `export *` and fix index import
-            expect(out).toContain("export { A, B } from './dep'");
+            expect(out).toContain("export { A, B } from \"./dep\"");
             // Annotated for Closure compiler
             expect(out).toContain('* @param {?} x');
             // Comments should stay multi-line
@@ -75,7 +75,7 @@ describe('tsc-wrapped', function () {
             .then(function () {
             var out = readOut('js');
             // Expand `export *` and fix index import
-            expect(out).toContain("export { A, B } from './dep'");
+            expect(out).toContain("export { A, B } from \"./dep\"");
             // Annotated for Closure compiler
             expect(out).toContain('* @param {?} x');
             done();
@@ -164,7 +164,7 @@ describe('tsc-wrapped', function () {
         main_1.main(basePath, { basePath: basePath })
             .then(function () {
             var out = readOut('js.map');
-            expect(out).toContain('"sources":["other_test.ts","../test.ts"]');
+            expect(out).toContain('"sources":["other_test.ts"]');
             done();
         })
             .catch(function (e) { return done.fail(e); });
@@ -180,7 +180,7 @@ describe('tsc-wrapped', function () {
         main_1.main(basePath, { basePath: basePath })
             .then(function () {
             var out = readOut('js.map');
-            expect(out).toContain('"sources":["other_test.ts","../test.ts"]');
+            expect(out).toContain('"sources":["other_test.ts"]');
             done();
         })
             .catch(function (e) { return done.fail(e); });
@@ -190,7 +190,7 @@ describe('tsc-wrapped', function () {
         main_1.main(basePath, { basePath: basePath })
             .then(function () {
             var fileOutput = readOut('js');
-            expect(fileOutput).toContain("export { A, B } from './dep'");
+            expect(fileOutput).toContain("export { A, B } from \"./dep\"");
             done();
         })
             .catch(function (e) { return done.fail(e); });

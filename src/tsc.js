@@ -79,8 +79,10 @@ function formatDiagnostics(diags) {
         var res = ts.DiagnosticCategory[d.category];
         if (d.file) {
             res += ' at ' + d.file.fileName + ':';
-            var _a = d.file.getLineAndCharacterOfPosition(d.start), line = _a.line, character = _a.character;
-            res += (line + 1) + ':' + (character + 1) + ':';
+            if (d.start !== undefined) {
+                var _a = d.file.getLineAndCharacterOfPosition(d.start), line = _a.line, character = _a.character;
+                res += (line + 1) + ':' + (character + 1) + ':';
+            }
         }
         res += ' ' + ts.flattenDiagnosticMessageText(d.messageText, '\n');
         return res;

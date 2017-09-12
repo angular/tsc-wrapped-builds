@@ -40,6 +40,7 @@ var Host = (function () {
         if (content)
             return ts.ScriptSnapshot.fromString(content);
     };
+    Host.prototype.fileExists = function (fileName) { return this.getFileContent(fileName) != null; };
     Host.prototype.getCurrentDirectory = function () { return '/'; };
     Host.prototype.getDefaultLibFileName = function (options) { return 'lib.d.ts'; };
     Host.prototype.overrideFile = function (fileName, content) {
@@ -106,7 +107,7 @@ var MockNode = (function () {
     MockNode.prototype.getFirstToken = function (sourceFile) { return null; };
     MockNode.prototype.getLastToken = function (sourceFile) { return null; };
     MockNode.prototype.forEachChild = function (cbNode, cbNodeArray) {
-        return null;
+        return undefined;
     };
     return MockNode;
 }());
@@ -168,9 +169,11 @@ function expectNoDiagnostics(diagnostics) {
     for (var _i = 0, diagnostics_1 = diagnostics; _i < diagnostics_1.length; _i++) {
         var diagnostic = diagnostics_1[_i];
         var message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-        var _a = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start), line = _a.line, character = _a.character;
-        // tslint:disable-next-line:no-console
-        console.log(diagnostic.file.fileName + " (" + (line + 1) + "," + (character + 1) + "): " + message);
+        if (diagnostic.file && diagnostic.start) {
+            var _a = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start), line = _a.line, character = _a.character;
+            // tslint:disable-next-line:no-console
+            console.log(diagnostic.file.fileName + " (" + (line + 1) + "," + (character + 1) + "): " + message);
+        }
     }
     expect(diagnostics.length).toBe(0);
 }
@@ -185,13 +188,7 @@ function expectValidSources(service, program) {
 }
 exports.expectValidSources = expectValidSources;
 function allChildren(node, cb) {
-    return ts.forEachChild(node, function (child) {
-        var result = cb(node);
-        if (result) {
-            return result;
-        }
-        return allChildren(child, cb);
-    });
+    return ts.forEachChild(node, function (child) { return cb(node) || allChildren(child, cb); });
 }
 exports.allChildren = allChildren;
 function findClass(sourceFile, name) {
