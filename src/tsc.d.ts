@@ -23,13 +23,13 @@ export declare class UserError extends Error {
     toString(): string;
 }
 export declare function formatDiagnostics(diags: ts.Diagnostic[]): string;
-export declare function check(diags: ts.Diagnostic[]): void;
-export declare function validateAngularCompilerOptions(options: AngularCompilerOptions): ts.Diagnostic[];
+export declare function check(diags: ts.Diagnostic[] | undefined): void;
+export declare function validateAngularCompilerOptions(options: AngularCompilerOptions): ts.Diagnostic[] | undefined;
 export declare class Tsc implements CompilerInterface {
     private readFile;
     private readDirectory;
     private parseConfigHost;
-    constructor(readFile?: (path: string, encoding?: string) => string, readDirectory?: (path: string, extensions?: string[], exclude?: string[], include?: string[]) => string[]);
+    constructor(readFile?: (path: string, encoding?: string | undefined) => string, readDirectory?: (path: string, extensions?: string[] | undefined, exclude?: string[] | undefined, include?: string[] | undefined) => string[]);
     readConfiguration(project: string | VinylFile, basePath: string, existingOptions?: ts.CompilerOptions): {
         parsed: ts.ParsedCommandLine;
         ngOptions: any;

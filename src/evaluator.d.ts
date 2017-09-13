@@ -31,8 +31,9 @@ export declare class Evaluator {
     private symbols;
     private nodeMap;
     private options;
-    constructor(symbols: Symbols, nodeMap: Map<MetadataEntry, ts.Node>, options?: CollectorOptions);
-    nameOf(node: ts.Node): string | MetadataError;
+    private recordExport;
+    constructor(symbols: Symbols, nodeMap: Map<MetadataEntry, ts.Node>, options?: CollectorOptions, recordExport?: ((name: string, value: MetadataValue) => void) | undefined);
+    nameOf(node: ts.Node | undefined): string | MetadataError;
     /**
      * Returns true if the expression represented by `node` can be folded into a literal expression.
      *
@@ -55,5 +56,5 @@ export declare class Evaluator {
      * Produce a JSON serialiable object representing `node`. The foldable values in the expression
      * tree are folded. For example, a node representing `1 + 2` is folded into `3`.
      */
-    evaluateNode(node: ts.Node): MetadataValue;
+    evaluateNode(node: ts.Node, preferReference?: boolean): MetadataValue;
 }

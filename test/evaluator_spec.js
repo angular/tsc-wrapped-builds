@@ -43,10 +43,10 @@ describe('Evaluator', function () {
     });
     it('should be able to fold literal expressions', function () {
         var consts = program.getSourceFile('consts.ts');
-        expect(evaluator.isFoldable(typescript_mocks_1.findVar(consts, 'someName').initializer)).toBeTruthy();
-        expect(evaluator.isFoldable(typescript_mocks_1.findVar(consts, 'someBool').initializer)).toBeTruthy();
-        expect(evaluator.isFoldable(typescript_mocks_1.findVar(consts, 'one').initializer)).toBeTruthy();
-        expect(evaluator.isFoldable(typescript_mocks_1.findVar(consts, 'two').initializer)).toBeTruthy();
+        expect(evaluator.isFoldable(typescript_mocks_1.findVarInitializer(consts, 'someName'))).toBeTruthy();
+        expect(evaluator.isFoldable(typescript_mocks_1.findVarInitializer(consts, 'someBool'))).toBeTruthy();
+        expect(evaluator.isFoldable(typescript_mocks_1.findVarInitializer(consts, 'one'))).toBeTruthy();
+        expect(evaluator.isFoldable(typescript_mocks_1.findVarInitializer(consts, 'two'))).toBeTruthy();
     });
     it('should be able to fold expressions with foldable references', function () {
         var expressions = program.getSourceFile('expressions.ts');
@@ -54,19 +54,19 @@ describe('Evaluator', function () {
         symbols.define('someBool', true);
         symbols.define('one', 1);
         symbols.define('two', 2);
-        expect(evaluator.isFoldable(typescript_mocks_1.findVar(expressions, 'three').initializer)).toBeTruthy();
-        expect(evaluator.isFoldable(typescript_mocks_1.findVar(expressions, 'four').initializer)).toBeTruthy();
+        expect(evaluator.isFoldable(typescript_mocks_1.findVarInitializer(expressions, 'three'))).toBeTruthy();
+        expect(evaluator.isFoldable(typescript_mocks_1.findVarInitializer(expressions, 'four'))).toBeTruthy();
         symbols.define('three', 3);
         symbols.define('four', 4);
-        expect(evaluator.isFoldable(typescript_mocks_1.findVar(expressions, 'obj').initializer)).toBeTruthy();
-        expect(evaluator.isFoldable(typescript_mocks_1.findVar(expressions, 'arr').initializer)).toBeTruthy();
+        expect(evaluator.isFoldable(typescript_mocks_1.findVarInitializer(expressions, 'obj'))).toBeTruthy();
+        expect(evaluator.isFoldable(typescript_mocks_1.findVarInitializer(expressions, 'arr'))).toBeTruthy();
     });
     it('should be able to evaluate literal expressions', function () {
         var consts = program.getSourceFile('consts.ts');
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(consts, 'someName').initializer)).toBe('some-name');
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(consts, 'someBool').initializer)).toBe(true);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(consts, 'one').initializer)).toBe(1);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(consts, 'two').initializer)).toBe(2);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(consts, 'someName'))).toBe('some-name');
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(consts, 'someBool'))).toBe(true);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(consts, 'one'))).toBe(1);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(consts, 'two'))).toBe(2);
     });
     it('should be able to evaluate expressions', function () {
         var expressions = program.getSourceFile('expressions.ts');
@@ -74,71 +74,70 @@ describe('Evaluator', function () {
         symbols.define('someBool', true);
         symbols.define('one', 1);
         symbols.define('two', 2);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'three').initializer)).toBe(3);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'three'))).toBe(3);
         symbols.define('three', 3);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'four').initializer)).toBe(4);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'four'))).toBe(4);
         symbols.define('four', 4);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'obj').initializer))
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'obj')))
             .toEqual({ one: 1, two: 2, three: 3, four: 4 });
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'arr').initializer)).toEqual([1, 2, 3, 4]);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bTrue').initializer)).toEqual(true);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bFalse').initializer)).toEqual(false);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bAnd').initializer)).toEqual(true);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bOr').initializer)).toEqual(true);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'nDiv').initializer)).toEqual(2);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'nMod').initializer)).toEqual(1);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bLOr').initializer)).toEqual(false || true);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bLAnd').initializer)).toEqual(true && true);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bBOr').initializer)).toEqual(0x11 | 0x22);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bBAnd').initializer)).toEqual(0x11 & 0x03);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bXor').initializer)).toEqual(0x11 ^ 0x21);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bEqual').initializer))
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'arr'))).toEqual([1, 2, 3, 4]);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bTrue'))).toEqual(true);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bFalse'))).toEqual(false);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bAnd'))).toEqual(true);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bOr'))).toEqual(true);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'nDiv'))).toEqual(2);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'nMod'))).toEqual(1);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bLOr'))).toEqual(false || true);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bLAnd'))).toEqual(true && true);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bBOr'))).toEqual(0x11 | 0x22);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bBAnd'))).toEqual(0x11 & 0x03);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bXor'))).toEqual(0x11 ^ 0x21);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bEqual')))
             .toEqual(1 == '1');
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bNotEqual').initializer))
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bNotEqual')))
             .toEqual(1 != '1');
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bIdentical').initializer))
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bIdentical')))
             .toEqual(1 === '1');
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bNotIdentical').initializer))
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bNotIdentical')))
             .toEqual(1 !== '1');
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bLessThan').initializer)).toEqual(1 < 2);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bGreaterThan').initializer)).toEqual(1 > 2);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bLessThanEqual').initializer))
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bLessThan'))).toEqual(1 < 2);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bGreaterThan'))).toEqual(1 > 2);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bLessThanEqual')))
             .toEqual(1 <= 2);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bGreaterThanEqual').initializer))
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bGreaterThanEqual')))
             .toEqual(1 >= 2);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bShiftLeft').initializer)).toEqual(1 << 2);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bShiftRight').initializer))
-            .toEqual(-1 >> 2);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'bShiftRightU').initializer))
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bShiftLeft'))).toEqual(1 << 2);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bShiftRight'))).toEqual(-1 >> 2);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'bShiftRightU')))
             .toEqual(-1 >>> 2);
     });
     it('should report recursive references as symbolic', function () {
         var expressions = program.getSourceFile('expressions.ts');
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'recursiveA').initializer))
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'recursiveA')))
             .toEqual({ __symbolic: 'reference', name: 'recursiveB' });
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(expressions, 'recursiveB').initializer))
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(expressions, 'recursiveB')))
             .toEqual({ __symbolic: 'reference', name: 'recursiveA' });
     });
     it('should correctly handle special cases for CONST_EXPR', function () {
         var const_expr = program.getSourceFile('const_expr.ts');
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(const_expr, 'bTrue').initializer)).toEqual(true);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(const_expr, 'bFalse').initializer)).toEqual(false);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(const_expr, 'bTrue'))).toEqual(true);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(const_expr, 'bFalse'))).toEqual(false);
     });
     it('should resolve a forwardRef', function () {
         var forwardRef = program.getSourceFile('forwardRef.ts');
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(forwardRef, 'bTrue').initializer)).toEqual(true);
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(forwardRef, 'bFalse').initializer)).toEqual(false);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(forwardRef, 'bTrue'))).toEqual(true);
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(forwardRef, 'bFalse'))).toEqual(false);
     });
     it('should return new expressions', function () {
         symbols.define('Value', { __symbolic: 'reference', module: './classes', name: 'Value' });
         evaluator = new evaluator_1.Evaluator(symbols, new Map());
         var newExpression = program.getSourceFile('newExpression.ts');
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(newExpression, 'someValue').initializer)).toEqual({
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(newExpression, 'someValue'))).toEqual({
             __symbolic: 'new',
             expression: { __symbolic: 'reference', name: 'Value', module: './classes' },
             arguments: ['name', 12]
         });
-        expect(evaluator.evaluateNode(typescript_mocks_1.findVar(newExpression, 'complex').initializer)).toEqual({
+        expect(evaluator.evaluateNode(typescript_mocks_1.findVarInitializer(newExpression, 'complex'))).toEqual({
             __symbolic: 'new',
             expression: { __symbolic: 'reference', name: 'Value', module: './classes' },
             arguments: ['name', 12]
@@ -201,6 +200,33 @@ describe('Evaluator', function () {
         expect(evaluator.evaluateNode(expr.initializer))
             .toEqual({ __symbolic: 'new', expression: { __symbolic: 'reference', name: 'f' } });
     });
+    describe('with substitution', function () {
+        var evaluator;
+        var lambdaTemp = 'lambdaTemp';
+        beforeEach(function () {
+            evaluator = new evaluator_1.Evaluator(symbols, new Map(), {
+                substituteExpression: function (value, node) {
+                    if (node.kind == ts.SyntaxKind.ArrowFunction) {
+                        return { __symbolic: 'reference', name: lambdaTemp };
+                    }
+                    return value;
+                }
+            });
+        });
+        it('should be able to substitute a lambda with a reference', function () {
+            var source = sourceFileOf("\n        var b = 1;\n        export var a = () => b;\n      ");
+            var expr = typescript_mocks_1.findVar(source, 'a');
+            expect(evaluator.evaluateNode(expr.initializer))
+                .toEqual({ __symbolic: 'reference', name: lambdaTemp });
+        });
+        it('should be able to substitute a lambda in an expression', function () {
+            var source = sourceFileOf("\n        var b = 1;\n        export var a = [\n          { provide: 'someValue': useFactory: () => b }\n        ];\n      ");
+            var expr = typescript_mocks_1.findVar(source, 'a');
+            expect(evaluator.evaluateNode(expr.initializer)).toEqual([
+                { provide: 'someValue', useFactory: { __symbolic: 'reference', name: lambdaTemp } }
+            ]);
+        });
+    });
 });
 function sourceFileOf(text) {
     return ts.createSourceFile('test.ts', text, ts.ScriptTarget.Latest, true);
@@ -218,4 +244,4 @@ var FILES = {
     'errors.ts': "\n    let f = () => 1;\n    let e: NotFound;\n    let s = { 1: 1, 2: 2 };\n    let t = typeof 12;\n  ",
     'declared.ts': "\n    declare namespace Foo {\n      type A = string;\n    }\n\n    let a: Foo.A = 'some value';\n  "
 };
-//# sourceMappingURL=evaluator.spec.js.map
+//# sourceMappingURL=evaluator_spec.js.map

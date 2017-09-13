@@ -7,7 +7,7 @@ export declare class MockStringBundlerHost implements MetadataBundlerHost {
     private directory;
     collector: MetadataCollector;
     constructor(dirName: string, directory: Directory);
-    getMetadataFor(moduleName: string): ModuleMetadata;
+    getMetadataFor(moduleName: string): ModuleMetadata | undefined;
 }
 export declare const SIMPLE_LIBRARY: {
     'lib': {

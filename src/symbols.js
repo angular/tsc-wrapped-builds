@@ -11,9 +11,15 @@ var ts = require("typescript");
 var Symbols = (function () {
     function Symbols(sourceFile) {
         this.sourceFile = sourceFile;
+        this.references = new Map();
     }
-    Symbols.prototype.resolve = function (name) { return this.symbols.get(name); };
+    Symbols.prototype.resolve = function (name, preferReference) {
+        return (preferReference && this.references.get(name)) || this.symbols.get(name);
+    };
     Symbols.prototype.define = function (name, value) { this.symbols.set(name, value); };
+    Symbols.prototype.defineReference = function (name, value) {
+        this.references.set(name, value);
+    };
     Symbols.prototype.has = function (name) { return this.symbols.has(name); };
     Object.defineProperty(Symbols.prototype, "symbols", {
         get: function () {
@@ -40,22 +46,23 @@ var Symbols = (function () {
                     if (importEqualsDeclaration.moduleReference.kind ===
                         ts.SyntaxKind.ExternalModuleReference) {
                         var externalReference = importEqualsDeclaration.moduleReference;
-                        // An `import <identifier> = require(<module-specifier>);
-                        if (!externalReference.expression.parent) {
-                            // The `parent` field of a node is set by the TypeScript binder (run as
-                            // part of the type checker). Setting it here allows us to call `getText()`
-                            // even if the `SourceFile` was not type checked (which looks for `SourceFile`
-                            // in the parent chain). This doesn't damage the node as the binder unconditionally
-                            // sets the parent.
-                            externalReference.expression.parent = externalReference;
-                            externalReference.parent = _this.sourceFile;
+                        if (externalReference.expression) {
+                            // An `import <identifier> = require(<module-specifier>);
+                            if (!externalReference.expression.parent) {
+                                // The `parent` field of a node is set by the TypeScript binder (run as
+                                // part of the type checker). Setting it here allows us to call `getText()`
+                                // even if the `SourceFile` was not type checked (which looks for `SourceFile`
+                                // in the parent chain). This doesn't damage the node as the binder unconditionally
+                                // sets the parent.
+                                externalReference.expression.parent = externalReference;
+                                externalReference.parent = _this.sourceFile;
+                            }
+                            var from_1 = stripQuotes(externalReference.expression.getText());
+                            symbols.set(importEqualsDeclaration.name.text, { __symbolic: 'reference', module: from_1 });
+                            break;
                         }
-                        var from_1 = stripQuotes(externalReference.expression.getText());
-                        symbols.set(importEqualsDeclaration.name.text, { __symbolic: 'reference', module: from_1 });
                     }
-                    else {
-                        symbols.set(importEqualsDeclaration.name.text, { __symbolic: 'error', message: "Unsupported import syntax" });
-                    }
+                    symbols.set(importEqualsDeclaration.name.text, { __symbolic: 'error', message: "Unsupported import syntax" });
                     break;
                 case ts.SyntaxKind.ImportDeclaration:
                     var importDecl = node;
