@@ -185,14 +185,39 @@ var MetadataBundler = (function () {
             }
         }
         exportedSymbols.forEach(function (symbol) { return _this.convertSymbol(symbol); });
+        var symbolsMap = new Map();
         Array.from(this.symbolMap.values()).forEach(function (symbol) {
             if (symbol.referenced && !symbol.reexport) {
                 var name_3 = symbol.name;
+                var declaredName = symbol.declaration.name;
                 if (symbol.isPrivate && !symbol.privateName) {
                     name_3 = newPrivateName();
                     symbol.privateName = name_3;
                 }
+                if (symbolsMap.has(declaredName)) {
+                    var names = symbolsMap.get(declaredName);
+                    names.push(name_3);
+                }
+                else {
+                    symbolsMap.set(declaredName, [name_3]);
+                }
                 result[name_3] = symbol.value;
+            }
+        });
+        // check for duplicated entries
+        symbolsMap.forEach(function (names, declaredName) {
+            if (names.length > 1) {
+                // prefer the export that uses the declared name (if any)
+                var reference_1 = names.indexOf(declaredName);
+                if (reference_1 === -1) {
+                    reference_1 = 0;
+                }
+                // keep one entry and replace the others by references
+                names.forEach(function (name, i) {
+                    if (i !== reference_1) {
+                        result[name] = { __symbolic: 'reference', name: names[reference_1] };
+                    }
+                });
             }
         });
         return result;
