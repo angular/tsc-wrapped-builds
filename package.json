@@ -1,6 +1,6 @@
 {
   "name": "@angular/tsc-wrapped",
-  "version": "5.0.0-beta.7-e17128e",
+  "version": "5.0.0-beta.7-9d2236a",
   "description": "Wraps the tsc CLI, allowing extensions.",
   "homepage": "https://github.com/angular/angular/blob/master/packages/tsc-wrapped",
   "bugs": "https://github.com/angular/angular/issues",
