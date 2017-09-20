@@ -13,7 +13,7 @@ export interface BundledModule {
     privates: BundlePrivateEntry[];
 }
 export interface MetadataBundlerHost {
-    getMetadataFor(moduleName: string): ModuleMetadata;
+    getMetadataFor(moduleName: string): ModuleMetadata | undefined;
 }
 export declare class MetadataBundler {
     private root;
@@ -37,6 +37,7 @@ export declare class MetadataBundler {
     private canonicalizeSymbols(exportedSymbols);
     private canonicalizeSymbol(symbol);
     private getEntries(exportedSymbols);
+    private getReExports(exportedSymbols);
     private convertSymbol(symbol);
     private convertEntry(moduleName, value);
     private convertClass(moduleName, value);
@@ -56,5 +57,5 @@ export declare class CompilerHostAdapter implements MetadataBundlerHost {
     private host;
     private collector;
     constructor(host: ts.CompilerHost);
-    getMetadataFor(fileName: string): ModuleMetadata;
+    getMetadataFor(fileName: string): ModuleMetadata | undefined;
 }

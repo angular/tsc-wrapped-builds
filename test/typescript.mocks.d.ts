@@ -11,7 +11,8 @@ export declare class Host implements ts.LanguageServiceHost {
     getCompilationSettings(): ts.CompilerOptions;
     getScriptFileNames(): string[];
     getScriptVersion(fileName: string): string;
-    getScriptSnapshot(fileName: string): ts.IScriptSnapshot;
+    getScriptSnapshot(fileName: string): ts.IScriptSnapshot | undefined;
+    fileExists(fileName: string): boolean;
     getCurrentDirectory(): string;
     getDefaultLibFileName(options: ts.CompilerOptions): string;
     overrideFile(fileName: string, content: string): void;
@@ -39,7 +40,7 @@ export declare class MockNode implements ts.Node {
     getText(sourceFile?: ts.SourceFile): string;
     getFirstToken(sourceFile?: ts.SourceFile): ts.Node;
     getLastToken(sourceFile?: ts.SourceFile): ts.Node;
-    forEachChild<T>(cbNode: (node: ts.Node) => T, cbNodeArray?: (nodes: ts.Node[]) => T): T;
+    forEachChild<T>(cbNode: (node: ts.Node) => T | undefined, cbNodeArray?: (nodes: ts.NodeArray<ts.Node>) => T | undefined): T | undefined;
 }
 export declare class MockIdentifier extends MockNode implements ts.Identifier {
     name: string;
@@ -51,6 +52,7 @@ export declare class MockIdentifier extends MockNode implements ts.Identifier {
     _incrementExpressionBrand: any;
     _unaryExpressionBrand: any;
     _expressionBrand: any;
+    _updateExpressionBrand: any;
     constructor(name: string, kind?: ts.SyntaxKind.Identifier, flags?: ts.NodeFlags, pos?: number, end?: number);
 }
 export declare class MockVariableDeclaration extends MockNode implements ts.VariableDeclaration {
@@ -74,9 +76,10 @@ export declare class MockSymbol implements ts.Symbol {
 }
 export declare function expectNoDiagnostics(diagnostics: ts.Diagnostic[]): void;
 export declare function expectValidSources(service: ts.LanguageService, program: ts.Program): void;
-export declare function allChildren<T>(node: ts.Node, cb: (node: ts.Node) => T): T;
-export declare function findClass(sourceFile: ts.SourceFile, name: string): ts.ClassDeclaration;
-export declare function findVar(sourceFile: ts.SourceFile, name: string): ts.VariableDeclaration;
+export declare function allChildren<T>(node: ts.Node, cb: (node: ts.Node) => T | undefined): T | undefined;
+export declare function findClass(sourceFile: ts.SourceFile, name: string): ts.ClassDeclaration | undefined;
+export declare function findVar(sourceFile: ts.SourceFile, name: string): ts.VariableDeclaration | undefined;
+export declare function findVarInitializer(sourceFile: ts.SourceFile, name: string): ts.Expression;
 export declare function isClass(node: ts.Node): node is ts.ClassDeclaration;
-export declare function isNamed(node: ts.Node, name: string): node is ts.Identifier;
+export declare function isNamed(node: ts.Node | undefined, name: string): node is ts.Identifier;
 export declare function isVar(node: ts.Node): node is ts.VariableDeclaration;

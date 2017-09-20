@@ -1,3 +1,4 @@
+"use strict";
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -5,7 +6,8 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-"use strict";
+var _this = this;
+Object.defineProperty(exports, "__esModule", { value: true });
 var ts = require("typescript");
 var collector_1 = require("../src/collector");
 var schema_1 = require("../src/schema");
@@ -30,6 +32,7 @@ describe('Collector', function () {
             'exported-classes.ts',
             'exported-functions.ts',
             'exported-enum.ts',
+            'exported-type.ts',
             'exported-consts.ts',
             'local-symbol-ref.ts',
             'local-function-ref.ts',
@@ -58,6 +61,11 @@ describe('Collector', function () {
         var sourceFile = program.getSourceFile('app/empty.ts');
         var metadata = collector.getMetadata(sourceFile);
         expect(metadata).toBeUndefined();
+    });
+    it('should return an interface reference for types', function () {
+        var sourceFile = program.getSourceFile('/exported-type.ts');
+        var metadata = collector.getMetadata(sourceFile);
+        expect(metadata).toEqual({ __symbolic: 'module', version: 3, metadata: { SomeType: { __symbolic: 'interface' } } });
     });
     it('should return an interface reference for interfaces', function () {
         var sourceFile = program.getSourceFile('app/hero.ts');
@@ -573,6 +581,85 @@ describe('Collector', function () {
                 }]
         });
     });
+    describe('with interpolations', function () {
+        function e(expr, prefix) {
+            var metadata = collectSource((prefix || '') + " export let value = " + expr + ";");
+            return expect(metadata.metadata['value']);
+        }
+        it('should be able to collect a raw interpolated string', function () { e('`simple value`').toBe('simple value'); });
+        it('should be able to interpolate a single value', function () { e('`${foo}`', 'const foo = "foo value"').toBe('foo value'); });
+        it('should be able to interpolate multiple values', function () {
+            e('`foo:${foo}, bar:${bar}, end`', 'const foo = "foo"; const bar = "bar";')
+                .toBe('foo:foo, bar:bar, end');
+        });
+        it('should be able to interpolate with an imported reference', function () {
+            e('`external:${external}`', 'import {external} from "./external";').toEqual({
+                __symbolic: 'binop',
+                operator: '+',
+                left: 'external:',
+                right: {
+                    __symbolic: 'reference',
+                    module: './external',
+                    name: 'external',
+                }
+            });
+        });
+        it('should simplify a redundant template', function () {
+            e('`${external}`', 'import {external} from "./external";')
+                .toEqual({ __symbolic: 'reference', module: './external', name: 'external' });
+        });
+        it('should be able to collect complex template with imported references', function () {
+            e('`foo:${foo}, bar:${bar}, end`', 'import {foo, bar} from "./external";').toEqual({
+                __symbolic: 'binop',
+                operator: '+',
+                left: {
+                    __symbolic: 'binop',
+                    operator: '+',
+                    left: {
+                        __symbolic: 'binop',
+                        operator: '+',
+                        left: {
+                            __symbolic: 'binop',
+                            operator: '+',
+                            left: 'foo:',
+                            right: { __symbolic: 'reference', module: './external', name: 'foo' }
+                        },
+                        right: ', bar:'
+                    },
+                    right: { __symbolic: 'reference', module: './external', name: 'bar' }
+                },
+                right: ', end'
+            });
+        });
+        it('should reject a tagged literal', function () {
+            e('tag`some value`').toEqual({
+                __symbolic: 'error',
+                message: 'Tagged template expressions are not supported in metadata',
+                line: 0,
+                character: 20
+            });
+        });
+    });
+    it('should ignore |null or |undefined in type expressions', function () {
+        var metadata = collectSource("\n      import {Foo} from './foo';\n      export class SomeClass {\n        constructor (a: Foo, b: Foo | null, c: Foo | undefined, d: Foo | undefined | null, e: Foo | undefined | null | Foo) {}\n      }\n    ");
+        expect(metadata.metadata['SomeClass'].members).toEqual({
+            __ctor__: [{
+                    __symbolic: 'constructor',
+                    parameters: [
+                        { __symbolic: 'reference', module: './foo', name: 'Foo' },
+                        { __symbolic: 'reference', module: './foo', name: 'Foo' },
+                        { __symbolic: 'reference', module: './foo', name: 'Foo' },
+                        { __symbolic: 'reference', module: './foo', name: 'Foo' },
+                        { __symbolic: 'reference', module: './foo', name: 'Foo' }
+                    ]
+                }]
+        });
+    });
+    it('should treat exported class expressions as a class', function () {
+        var source = ts.createSourceFile('', "\n    export const InjectionToken: {new<T>(desc: string): InjectionToken<T>;} = class {\n      constructor(protected _desc: string) {}\n\n      toString(): string { return `InjectionToken " + _this._desc + "`; }\n    } as any;", ts.ScriptTarget.Latest, true);
+        var metadata = collector.getMetadata(source);
+        expect(metadata.metadata).toEqual({ InjectionToken: { __symbolic: 'class' } });
+    });
     describe('in strict mode', function () {
         it('should throw if an error symbol is collecting a reference to a non-exported symbol', function () {
             var source = program.getSourceFile('/local-symbol-ref.ts');
@@ -654,10 +741,93 @@ describe('Collector', function () {
                 expect(nine.arity).toBe(9);
         });
     });
+    describe('regerssion', function () {
+        it('should be able to collect a short-hand property value', function () {
+            var metadata = collectSource("\n        const children = { f1: 1 };\n        export const r = [\n          {path: ':locale', children}\n        ];\n      ");
+            expect(metadata.metadata).toEqual({ r: [{ path: ':locale', children: { f1: 1 } }] });
+        });
+        // #17518
+        it('should skip a default function', function () {
+            var metadata = collectSource("\n        export default function () {\n\n          const mainRoutes = [\n            {name: 'a', abstract: true, component: 'main'},\n\n            {name: 'a.welcome', url: '/welcome', component: 'welcome'}\n          ];\n\n          return mainRoutes;\n\n        }");
+            expect(metadata).toBeUndefined();
+        });
+        it('should skip a named default export', function () {
+            var metadata = collectSource("\n        function mainRoutes() {\n\n          const mainRoutes = [\n            {name: 'a', abstract: true, component: 'main'},\n\n            {name: 'a.welcome', url: '/welcome', component: 'welcome'}\n          ];\n\n          return mainRoutes;\n\n        }\n\n        exports = foo;\n        ");
+            expect(metadata).toBeUndefined();
+        });
+        it('should be able to collect an invalid access expression', function () {
+            var source = createSource("\n        import {Component} from '@angular/core';\n\n        const value = [];\n        @Component({\n          provider: [{provide: 'some token', useValue: value[]}]\n        })\n        export class MyComponent {}\n      ");
+            var metadata = collector.getMetadata(source);
+            expect(metadata.metadata.MyComponent).toEqual({
+                __symbolic: 'class',
+                decorators: [{
+                        __symbolic: 'error',
+                        message: 'Expression form not supported',
+                        line: 5,
+                        character: 55
+                    }]
+            });
+        });
+    });
+    describe('references', function () {
+        beforeEach(function () { collector = new collector_1.MetadataCollector({ quotedNames: true }); });
+        it('should record a reference to an exported field of a useValue', function () {
+            var metadata = collectSource("\n        export var someValue = 1;\n        export const v = {\n          useValue: someValue\n        };\n      ");
+            expect(metadata.metadata['someValue']).toEqual(1);
+            expect(metadata.metadata['v']).toEqual({
+                useValue: { __symbolic: 'reference', name: 'someValue' }
+            });
+        });
+        it('should leave external references in place in an object literal', function () {
+            var metadata = collectSource("\n        export const myLambda = () => [1, 2, 3];\n        const indirect = [{a: 1, b: 3: c: myLambda}];\n        export const v = {\n          v: {i: indirect}\n        }\n      ");
+            expect(metadata.metadata['v']).toEqual({
+                v: { i: [{ a: 1, b: 3, c: { __symbolic: 'reference', name: 'myLambda' } }] }
+            });
+        });
+        it('should leave an external reference in place in an array literal', function () {
+            var metadata = collectSource("\n        export const myLambda = () => [1, 2, 3];\n        const indirect = [1, 3, myLambda}];\n        export const v = {\n          v: {i: indirect}\n        }\n      ");
+            expect(metadata.metadata['v']).toEqual({
+                v: { i: [1, 3, { __symbolic: 'reference', name: 'myLambda' }] }
+            });
+        });
+    });
+    describe('substitutions', function () {
+        var lambdaTemp = 'lambdaTemp';
+        it('should be able to substitute a lambda', function () {
+            var source = createSource("\n        const b = 1;\n        export const a = () => b;\n      ");
+            var metadata = collector.getMetadata(source, /* strict */ false, function (value, node) {
+                if (node.kind === ts.SyntaxKind.ArrowFunction) {
+                    return { __symbolic: 'reference', name: lambdaTemp };
+                }
+                return value;
+            });
+            expect(metadata.metadata['a']).toEqual({ __symbolic: 'reference', name: lambdaTemp });
+        });
+        it('should compose substitution functions', function () {
+            var collector = new collector_1.MetadataCollector({
+                substituteExpression: function (value, node) { return schema_1.isMetadataGlobalReferenceExpression(value) &&
+                    value.name == lambdaTemp ?
+                    { __symbolic: 'reference', name: value.name + '2' } :
+                    value; }
+            });
+            var source = createSource("\n        const b = 1;\n        export const a = () => b;\n      ");
+            var metadata = collector.getMetadata(source, /* strict */ false, function (value, node) {
+                if (node.kind === ts.SyntaxKind.ArrowFunction) {
+                    return { __symbolic: 'reference', name: lambdaTemp };
+                }
+                return value;
+            });
+            expect(metadata.metadata['a']).toEqual({ __symbolic: 'reference', name: lambdaTemp + '2' });
+        });
+    });
     function override(fileName, content) {
         host.overrideFile(fileName, content);
         host.addFile(fileName);
         program = service.getProgram();
+    }
+    function collectSource(content) {
+        var sourceFile = createSource(content);
+        return collector.getMetadata(sourceFile);
     }
 });
 // TODO: Do not use \` in a template literal as it confuses clang-format
@@ -667,7 +837,7 @@ var FILES = {
             '`' +
             "\n        <h2>My Heroes</h2>\n        <ul class=\"heroes\">\n          <li *ngFor=\"#hero of heroes\"\n            (click)=\"onSelect(hero)\"\n            [class.selected]=\"hero === selectedHero\">\n            <span class=\"badge\">{{hero.id | lowercase}}</span> {{hero.name | uppercase}}\n          </li>\n        </ul>\n        <my-hero-detail [hero]=\"selectedHero\"></my-hero-detail>\n        " +
             '`' +
-            ",\n        directives: [HeroDetailComponent, common.NgFor],\n        providers: [HeroService],\n        pipes: [common.LowerCasePipe, common.UpperCasePipe]\n      })\n      export class AppComponent implements OnInit {\n        public title = 'Tour of Heroes';\n        public heroes: Hero[];\n        public selectedHero: Hero;\n\n        constructor(private _heroService: HeroService) { }\n\n        onSelect(hero: Hero) { this.selectedHero = hero; }\n\n        ngOnInit() {\n            this.getHeroes()\n        }\n\n        getHeroes() {\n          this._heroService.getHeroesSlowly().then(heros => this.heroes = heros);\n        }\n      }",
+            ",\n        directives: [HeroDetailComponent, common.NgFor],\n        providers: [HeroService],\n        pipes: [common.LowerCasePipe, common.UpperCasePipe]\n      })\n      export class AppComponent implements OnInit {\n        public title = 'Tour of Heroes';\n        public heroes: Hero[];\n        public selectedHero: Hero;\n\n        constructor(private _heroService: HeroService) { }\n\n        onSelect(hero: Hero) { this.selectedHero = hero; }\n\n        ngOnInit() {\n            this.getHeroes()\n        }\n\n        getHeroes() {\n          this._heroService.getHeroesSlowly().then(heroes => this.heroes = heroes);\n        }\n      }",
         'hero.ts': "\n      export interface Hero {\n        id: number;\n        name: string;\n      }",
         'empty.ts': "",
         'hero-detail.component.ts': "\n      import {Component, Input} from 'angular2/core';\n      import {Hero} from './hero';\n\n      @Component({\n        selector: 'my-hero-detail',\n        template: " +
@@ -692,6 +862,7 @@ var FILES = {
     'class-inheritance-parent.ts': "\n    export class ParentClassFromOtherFile {}\n  ",
     'class-inheritance.ts': "\n    import {ParentClassFromOtherFile} from './class-inheritance-parent';\n\n    export class ParentClass {}\n\n    export declare class DeclaredChildClass extends ParentClass {}\n\n    export class ChildClassSameFile extends ParentClass {}\n\n    export class ChildClassOtherFile extends ParentClassFromOtherFile {}\n  ",
     'exported-functions.ts': "\n    export function one(a: string, b: string, c: string) {\n      return {a: a, b: b, c: c};\n    }\n    export function two(a: string, b: string, c: string) {\n      return {a, b, c};\n    }\n    export function three({a, b, c}: {a: string, b: string, c: string}) {\n      return [a, b, c];\n    }\n    export function supportsState(): boolean {\n     return !!window.history.pushState;\n    }\n    export function complexFn(x: any): boolean {\n      if (x) {\n        return true;\n      } else {\n        return false;\n      }\n    }\n    export declare function declaredFn();\n  ",
+    'exported-type.ts': "\n    export type SomeType = 'a' | 'b';\n  ",
     'exported-enum.ts': "\n    import {constValue} from './exported-consts';\n\n    export const someValue = 30;\n    export enum SomeEnum { A, B, C = 100, D };\n    export enum ComplexEnum { A, B, C = someValue, D = someValue + 10, E = constValue };\n  ",
     'exported-consts.ts': "\n    export const constValue = 100;\n  ",
     'static-method.ts': "\n    export class MyModule {\n      static with(comp: any): any[] {\n        return [\n          MyModule,\n          { provider: 'a', useValue: comp }\n        ];\n      }\n    }\n  ",
@@ -714,4 +885,7 @@ var FILES = {
         }
     }
 };
-//# sourceMappingURL=collector.spec.js.map
+function createSource(text) {
+    return ts.createSourceFile('', text, ts.ScriptTarget.Latest, true);
+}
+//# sourceMappingURL=collector_spec.js.map

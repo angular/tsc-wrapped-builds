@@ -1,3 +1,4 @@
+"use strict";
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -5,7 +6,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var ts = require("typescript");
 var schema_1 = require("../src/schema");
 var symbols_1 = require("../src/symbols");
@@ -76,7 +77,7 @@ describe('Symbols', function () {
             switch (node.kind) {
                 case ts.SyntaxKind.VariableStatement:
                 case ts.SyntaxKind.VariableDeclarationList:
-                    return ts.forEachChild(node, visit);
+                    return !!ts.forEachChild(node, visit);
                 case ts.SyntaxKind.VariableDeclaration:
                     var variableDeclaration = node;
                     var nameNode = variableDeclaration.name;
@@ -96,4 +97,4 @@ var FILES = {
     'expressions.ts': "\n    import {someName, someBool, one, two} from './consts';\n  ",
     'imports.ts': "\n    import * as b from 'b';\n    import 'c';\n    import d from 'd';\n    import {f as g} from 'f';\n  "
 };
-//# sourceMappingURL=symbols.spec.js.map
+//# sourceMappingURL=symbols_spec.js.map
